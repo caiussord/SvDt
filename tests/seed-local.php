@@ -1,7 +1,7 @@
 <?php
 // Run with: wp eval-file tests/seed-local.php from the plugin directory.
 if (!defined('WP_CLI') || !WP_CLI || !str_contains(wp_normalize_path(ABSPATH), '/Local Sites/agendapro/')) {
-    throw new RuntimeException('Este script só pode ser usado no site AgendaPro do Local.');
+    throw new RuntimeException('Este script só pode ser usado no site SvDt do Local.');
 }
 
 global $wpdb;
@@ -37,12 +37,16 @@ if (!(int) $wpdb->get_var("SELECT COUNT(*) FROM $hours")) {
 $page = get_page_by_path('agendar');
 if (!$page) {
     $page_id = wp_insert_post(array(
-        'post_title' => 'Agende seu horário', 'post_name' => 'agendar',
-        'post_content' => '[agendapro_booking]', 'post_type' => 'page', 'post_status' => 'publish',
+        'post_title' => 'Reservar horário', 'post_name' => 'agendar',
+        'post_content' => '[svdt_booking]', 'post_type' => 'page', 'post_status' => 'publish',
     ));
 } else {
     $page_id = $page->ID;
+    wp_update_post(array('ID' => $page_id, 'post_title' => 'Reservar horário', 'post_content' => '[svdt_booking]'));
 }
+update_post_meta($page_id, '_wp_page_template', 'svdt-showcase.php');
+update_option('blogname', 'SvDt');
+update_option('blogdescription', 'Seu tempo, bem marcado.');
 update_option('show_on_front', 'page');
 update_option('page_on_front', $page_id);
-WP_CLI::success('Serviços, expediente e página de demonstração prontos.');
+WP_CLI::success('Serviços, expediente e página SvDt de demonstração prontos.');

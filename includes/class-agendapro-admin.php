@@ -6,7 +6,7 @@ final class AgendaPro_Admin
     public function register(): void
     {
         add_action('admin_menu', function () {
-            add_menu_page('AgendaPro', 'AgendaPro', 'manage_options', 'agendapro', array($this, 'bookings_page'), 'dashicons-calendar-alt', 26);
+            add_menu_page('SvDt', 'SvDt', 'manage_options', 'agendapro', array($this, 'bookings_page'), 'dashicons-calendar-alt', 26);
             add_submenu_page('agendapro', 'Agendamentos', 'Agendamentos', 'manage_options', 'agendapro', array($this, 'bookings_page'));
             add_submenu_page('agendapro', 'Serviços', 'Serviços', 'manage_options', 'agendapro-services', array($this, 'services_page'));
             add_submenu_page('agendapro', 'Disponibilidade', 'Disponibilidade', 'manage_options', 'agendapro-schedule', array($this, 'schedule_page'));
@@ -37,7 +37,7 @@ final class AgendaPro_Admin
 
     private function header(string $title, string $description): void
     {
-        echo '<div class="wrap ag-admin"><div class="ag-admin-head"><div><span class="ag-eyebrow">AGENDA / GESTÃO</span><h1>' . esc_html($title) . '</h1><p>' . esc_html($description) . '</p></div><span class="ag-admin-brand">Agenda<span>Pro</span></span></div>';
+        echo '<div class="wrap ag-admin"><div class="ag-admin-head"><div><span class="ag-eyebrow">SV·DT / GESTÃO</span><h1>' . esc_html($title) . '</h1><p>' . esc_html($description) . '</p></div><span class="ag-admin-brand">Sv<span>Dt.</span></span></div>';
         if (isset($_GET['notice'])) {
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html(sanitize_text_field(wp_unslash($_GET['notice']))) . '</p></div>';
         }
@@ -66,9 +66,11 @@ final class AgendaPro_Admin
         $rows = $wpdb->get_results($wpdb->prepare("SELECT b.*, s.name AS service_name FROM $table b LEFT JOIN $services s ON s.id = b.service_id WHERE $where ORDER BY b.starts_at ASC LIMIT 200", $args));
         $counts = array('pending' => 0, 'confirmed' => 0, 'cancelled' => 0, 'completed' => 0);
         $status_labels = array('pending' => 'Pendente', 'confirmed' => 'Confirmado', 'cancelled' => 'Cancelado', 'completed' => 'Concluído');
-        foreach ($rows as $row) $counts[$row->status] = ($counts[$row->status] ?? 0) + 1;
+        $daily_counts = $wpdb->get_results($wpdb->prepare("SELECT status, COUNT(*) AS total FROM $table WHERE DATE(starts_at) = %s GROUP BY status", $date));
+        foreach ($daily_counts as $item) $counts[$item->status] = (int) $item->total;
+        $daily_total = array_sum($counts);
         $this->header('Agendamentos', 'Acompanhe os pedidos e organize seu dia.');
-        echo '<div class="ag-metrics"><div><span>No período</span><strong>' . count($rows) . '</strong></div><div><span>Pendentes</span><strong>' . $counts['pending'] . '</strong></div><div><span>Confirmados</span><strong>' . $counts['confirmed'] . '</strong></div></div>';
+        echo '<div class="ag-metrics"><div><span>Reservas do dia</span><strong>' . $daily_total . '</strong><small>Visão geral</small></div><div><span>Aguardando decisão</span><strong>' . $counts['pending'] . '</strong><small>Pedidos pendentes</small></div><div><span>Confirmadas</span><strong>' . $counts['confirmed'] . '</strong><small>Horários garantidos</small></div></div>';
         echo '<form class="ag-filter" method="get"><input type="hidden" name="page" value="agendapro"><label>Data <input type="date" name="date" value="' . esc_attr($date) . '"></label><label>Status <select name="status"><option value="">Todos</option>';
         foreach (array('pending' => 'Pendente', 'confirmed' => 'Confirmado', 'cancelled' => 'Cancelado', 'completed' => 'Concluído') as $key => $label) {
             echo '<option value="' . esc_attr($key) . '" ' . selected($status, $key, false) . '>' . esc_html($label) . '</option>';
@@ -78,21 +80,23 @@ final class AgendaPro_Admin
             echo '<option value="' . esc_attr($service->id) . '" ' . selected($service_id, (int) $service->id, false) . '>' . esc_html($service->name) . '</option>';
         }
         echo '</select></label><button class="button button-primary">Filtrar</button></form>';
-        echo '<div class="ag-panel"><h2>Reservas</h2>';
-        if (!$rows) echo '<div class="ag-empty">Nenhum agendamento encontrado para esta data.</div>';
+        echo '<div class="ag-panel ag-agenda-panel"><div class="ag-agenda-heading"><div><span>LINHA DO TEMPO</span><h2>Reservas de ' . esc_html(AgendaPro_Schedule::parse_date($date)->format('d/m/Y')) . '</h2></div><strong>' . count($rows) . ' ' . (count($rows) === 1 ? 'registro' : 'registros') . '</strong></div>';
+        if (!$rows) echo '<div class="ag-empty"><span aria-hidden="true">✦</span><strong>Um dia livre por aqui.</strong><p>Nenhum agendamento encontrado para os filtros escolhidos.</p></div>';
         else {
-            echo '<div class="ag-table-wrap"><table class="widefat striped"><thead><tr><th>Horário</th><th>Serviço</th><th>Cliente</th><th>Contato</th><th>Status</th><th>Ações</th></tr></thead><tbody>';
+            echo '<div class="ag-booking-list">';
             foreach ($rows as $row) {
-                echo '<tr><td><strong>' . esc_html(substr($row->starts_at, 11, 5)) . '</strong></td><td>' . esc_html($row->service_name ?: 'Serviço removido') . '</td><td>' . esc_html($row->customer_name) . '</td><td><a href="mailto:' . esc_attr($row->customer_email) . '">' . esc_html($row->customer_email) . '</a><br>' . esc_html($row->customer_phone) . '</td><td><span class="ag-status ag-status-' . esc_attr($row->status) . '">' . esc_html($status_labels[$row->status] ?? $row->status) . '</span></td><td>';
+                echo '<article class="ag-booking-item"><div class="ag-booking-time"><span>INÍCIO</span><strong>' . esc_html(substr($row->starts_at, 11, 5)) . '</strong><small>#AG-' . esc_html(str_pad((string) $row->id, 6, '0', STR_PAD_LEFT)) . '</small></div><div class="ag-booking-details"><div class="ag-booking-main"><span class="ag-service-pill">' . esc_html($row->service_name ?: 'Serviço removido') . '</span><span class="ag-status ag-status-' . esc_attr($row->status) . '">' . esc_html($status_labels[$row->status] ?? $row->status) . '</span></div><h3>' . esc_html($row->customer_name) . '</h3><div class="ag-booking-contact"><a href="mailto:' . esc_attr($row->customer_email) . '">' . esc_html($row->customer_email) . '</a><a href="tel:' . esc_attr(preg_replace('/[^0-9+]/', '', $row->customer_phone)) . '">' . esc_html($row->customer_phone) . '</a></div>';
+                if ($row->notes) echo '<details class="ag-booking-notes"><summary>Ver observações</summary><p>' . esc_html($row->notes) . '</p></details>';
+                echo '</div><div class="ag-booking-actions">';
                 foreach (array('confirmed' => 'Confirmar', 'cancelled' => 'Cancelar', 'completed' => 'Concluir') as $next => $label) {
                     if (!in_array($row->status, array('pending', 'confirmed'), true) || $row->status === $next || ($next === 'completed' && $row->status !== 'confirmed') || ($next === 'confirmed' && $row->status !== 'pending')) continue;
                     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="ag-inline"><input type="hidden" name="action" value="agendapro_update_booking"><input type="hidden" name="id" value="' . esc_attr($row->id) . '"><input type="hidden" name="status" value="' . esc_attr($next) . '">';
                     wp_nonce_field('agendapro_update_booking');
-                    echo '<button class="button button-small">' . esc_html($label) . '</button></form> ';
+                    echo '<button class="button button-small ' . ($next === 'confirmed' ? 'ag-action-primary' : '') . '">' . esc_html($label) . '</button></form> ';
                 }
-                echo '</td></tr>';
+                echo '</div></article>';
             }
-            echo '</tbody></table></div>';
+            echo '</div>';
         }
         echo '</div></div>';
     }

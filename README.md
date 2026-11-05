@@ -1,78 +1,72 @@
-# AgendaPro — Plugin WordPress de Agendamentos
+# SvDt — agendamento com uma experiência melhor
 
-Projeto autoral demonstrativo para pequenos negócios que atendem com hora marcada. O visitante escolhe serviço, data e horário; o administrador acompanha as solicitações no WordPress.
+Plugin WordPress autoral demonstrativo para negócios que atendem com hora marcada. O visitante percorre três etapas claras: serviço, data e horário, dados. O painel apresenta as reservas como uma linha do tempo e permite confirmar, cancelar e concluir cada pedido.
 
-## Funcionalidades implementadas
+## Experiência
 
-- Serviços com duração, intervalo após o atendimento, descrição e estado ativo.
+- A agenda aparece após a escolha do serviço e mostra apenas horários válidos para sua duração.
+- Um horário selecionado abre o formulário; voltar preserva as escolhas anteriores.
+- O resumo e o indicador de progresso acompanham cada etapa.
+- Estados de carregamento, vazio, erro e sucesso têm mensagens próprias.
+- A página de demonstração usa o template opcional **SvDt · Página de reservas**. O shortcode continua funcionando em outros temas.
+- Navegação por teclado, foco visível, labels e preferência por movimento reduzido.
+
+![Página SvDt em desktop](docs/screenshots/svdt-desktop-step1.png)
+
+![Escolha de horário no celular](docs/screenshots/svdt-mobile-slots.png)
+
+![Escolha de horário em desktop](docs/screenshots/svdt-desktop-slots.png)
+
+![Painel de agendamentos](docs/screenshots/svdt-admin-bookings.png)
+
+Outras telas: [serviço no celular](docs/screenshots/svdt-mobile-step1.png), [dados](docs/screenshots/svdt-mobile-step3.png), [confirmação](docs/screenshots/svdt-success.png), [serviços no painel](docs/screenshots/svdt-admin-services.png) e [expediente](docs/screenshots/svdt-admin-schedule.png).
+
+## Funcionalidades do MVP
+
+- Serviços com duração, intervalo após atendimento, descrição e estado ativo.
 - Expediente com múltiplos intervalos por dia e bloqueio de datas.
 - Disponibilidade com antecedência mínima de 60 minutos e passos de 30 minutos.
-- Shortcode `[agendapro_booking]` com interface responsiva.
-- Solicitação pública com status pendente, validação no servidor, honeypot e limite de tentativas por IP.
-- Bloqueio de escrita MySQL por agenda durante a verificação e gravação de uma reserva.
-- Painel para filtrar agendamentos e confirmar, cancelar ou concluir.
+- Reserva pública com status pendente, validação no servidor, honeypot e limite de tentativas por IP.
+- Bloqueio MySQL por agenda durante a nova verificação e gravação, evitando reservas simultâneas sobrepostas.
+- Painel com filtros por data, status e serviço; ações de confirmação, cancelamento e conclusão.
 - Endpoints REST públicos e administrativos.
 
-## Instalação no Local
+## Instalação
 
-1. Crie e inicie um site WordPress no Local.
-2. Copie esta pasta `agendapro` para `app/public/wp-content/plugins/` do site. Para desenvolvimento, pode usar um link de diretório.
-3. No WordPress, abra **Plugins** e ative **AgendaPro**.
-4. Em **AgendaPro → Serviços**, cadastre pelo menos um serviço.
-5. Em **AgendaPro → Disponibilidade**, cadastre intervalos de expediente. Sem eles, não há horários livres.
-6. Crie uma página e adicione o shortcode `[agendapro_booking]`.
-7. Confira o fuso em **Configurações → Geral**. As datas e horas do plugin seguem esse fuso.
+Requisitos: WordPress 6.2+, PHP 8.0+ e MySQL com suporte a `GET_LOCK()`. O MVP usa uma agenda de atendimento.
 
-Nesta instalação Local, o endereço usado é **`http://localhost:10011/`**. Ele abre sem editar o arquivo `hosts` do Windows. O domínio `agendapro.local` continua configurado no Local, mas não resolve neste computador porque sua entrada não foi gravada no `hosts`. Se o Local atribuir outra porta depois de reiniciar o site, atualize as opções `home` e `siteurl` do WordPress para o novo `http://localhost:PORTA`.
+1. Copie a pasta do plugin para `wp-content/plugins/` e ative **SvDt** em **Plugins**.
+2. Em **SvDt → Serviços**, cadastre os serviços.
+3. Em **SvDt → Disponibilidade**, configure o expediente. Sem intervalos ativos, não há horários livres.
+4. Crie uma página com `[svdt_booking]`. Para reproduzir a demonstração, selecione o template **SvDt · Página de reservas** e defina a página como inicial.
+5. Ajuste o fuso em **Configurações → Geral**. O plugin usa esse fuso para todas as reservas.
 
-Requisitos: WordPress 6.2+, PHP 8.0+, MySQL com suporte a `GET_LOCK()` e uma única agenda de atendimento. As tabelas usam o prefixo real do WordPress e são criadas na ativação.
+O shortcode antigo `[agendapro_booking]` continua aceito para preservar páginas existentes. As tabelas e os nomes internos ainda usam `agendapro_` para preservar os dados da versão anterior; a marca pública, o menu e a API principal são SvDt.
+
+Nesta instalação Local, a demonstração abre em **`http://localhost:10011/`** e o painel em **`http://localhost:10011/wp-admin/`**. O domínio `agendapro.local` cadastrado no Local não resolve neste Windows porque falta sua entrada no arquivo `hosts`.
 
 ## API
 
 | Método | Rota | Acesso |
 |---|---|---|
-| GET | `/wp-json/agendapro/v1/services` | Público |
-| GET | `/wp-json/agendapro/v1/availability?service_id=1&date=AAAA-MM-DD` | Público |
-| POST | `/wp-json/agendapro/v1/bookings` | Público |
-| GET | `/wp-json/agendapro/v1/admin/bookings` | Administrador |
-| PATCH | `/wp-json/agendapro/v1/admin/bookings/{id}` | Administrador |
+| GET | `/wp-json/svdt/v1/services` | Público |
+| GET | `/wp-json/svdt/v1/availability?service_id=1&date=AAAA-MM-DD` | Público |
+| POST | `/wp-json/svdt/v1/bookings` | Público |
+| GET | `/wp-json/svdt/v1/admin/bookings` | Administrador |
+| PATCH | `/wp-json/svdt/v1/admin/bookings/{id}` | Administrador |
 
-O corpo do POST contém `service_id`, `date`, `time`, `customer_name`, `customer_email`, `customer_phone` e `notes` opcional. A resposta pública contém apenas `reference` e `status`.
+As rotas `agendapro/v1` permanecem como alias de compatibilidade. O corpo do POST contém `service_id`, `date`, `time`, `customer_name`, `customer_email`, `customer_phone` e `notes` opcional. A resposta pública contém apenas `reference` e `status`.
 
-## Regras principais
+## Verificação
 
-Agendamentos pendentes e confirmados bloqueiam o intervalo total de serviço e pausa. Cancelamentos liberam o intervalo. A disponibilidade é recalculada dentro de um bloqueio MySQL no momento do cadastro, serializando gravações da agenda única. O bloqueio precisa funcionar no servidor MySQL usado pela instalação; caso contrário, a criação retorna erro temporário.
+Validado no Local com WordPress 7.1.4, PHP 8.2.29 e MySQL 8.4.0. O plugin ativou e criou quatro tabelas. O teste `tests/smoke-local.php` verificou reserva, conflitos, transições de status, cancelamento, data bloqueada, serviço inativo e entrada inválida. Duas requisições simultâneas para o mesmo horário produziram HTTP 201 e HTTP 409. O endpoint administrativo rejeitou acesso público com HTTP 401. No navegador, o novo fluxo avançou e voltou sem perder a seleção, enviou uma reserva e permitiu confirmá-la no painel.
 
-O passo de horários e a antecedência podem ser alterados nas opções `agendapro_slot_minutes` e `agendapro_min_notice_minutes` por código ou WP-CLI. A interface administrativa para essas duas opções ainda não está disponível.
+Para reproduzir: `wp eval-file tests/seed-local.php`, `wp eval-file tests/smoke-local.php` e `node tests/concurrency-local.mjs` no ambiente Local. O teste de concorrência usa a porta 10011 por padrão; ajuste `AGENDAPRO_PORT` se necessário. Ele deixa uma reserva fictícia pendente.
 
-## Privacidade e retenção
+## Privacidade e limites
 
-O plugin armazena nome, e-mail, telefone e observações para administrar o agendamento. Agendamentos cancelados e concluídos são removidos automaticamente após 12 meses, por tarefa diária do WP-Cron. Agendamentos pendentes e confirmados permanecem até que um administrador altere seu status. Informe essa finalidade na política de privacidade do site e trate pedidos de acesso ou exclusão de dados no processo do negócio.
+Nome, e-mail, telefone e observações são armazenados para administrar a solicitação. Reservas canceladas e concluídas são removidas pelo WP-Cron após 12 meses. Reservas pendentes e confirmadas permanecem até que o administrador altere seu status. A desinstalação preserva dados por padrão; para apagá-los de forma irreversível, defina `AGENDAPRO_DELETE_DATA` como `true` no `wp-config.php` antes de desinstalar.
 
-Ao desinstalar, os dados são preservados por padrão. Para apagar todas as tabelas e opções na desinstalação, defina `AGENDAPRO_DELETE_DATA` como `true` no `wp-config.php` **antes** de remover o plugin. Essa exclusão é irreversível.
+O MVP não oferece pagamentos, e-mails automáticos, múltiplos profissionais, integração com calendários ou reagendamento pelo cliente. Horas locais repetidas em mudanças de horário de verão exigem teste adicional antes do uso em fusos afetados.
 
-## Capturas do MVP
-
-![Reserva em desktop](docs/screenshots/booking-desktop.png)
-
-![Reserva em celular com horário selecionado](docs/screenshots/booking-mobile-selected.png)
-
-![Painel de agendamentos](docs/screenshots/admin-bookings.png)
-
-Outras capturas: [serviços](docs/screenshots/admin-services.png), [expediente](docs/screenshots/admin-schedule.png) e [confirmação](docs/screenshots/booking-success.png).
-
-## Verificação e limitações
-
-Validado no Local com WordPress 7.1.4, PHP 8.2.29 e MySQL 8.4.0. O plugin ativou, criou as quatro tabelas e respondeu aos endpoints REST. `tests/smoke-local.php` verificou reserva, conflito, transições de status, cancelamento, data bloqueada, serviço inativo e entrada inválida. Uma requisição pública sem autenticação ao endpoint administrativo recebeu HTTP 401. `tests/concurrency-local.mjs` enviou duas reservas simultâneas para o mesmo horário: uma recebeu HTTP 201 e a outra HTTP 409. O fluxo público também foi concluído em navegador no tamanho de celular. Todos os arquivos PHP passaram em `php -l` e o JavaScript em `node --check`.
-
-Para reproduzir os testes no Local, instale o plugin, execute `wp eval-file tests/seed-local.php` e depois `wp eval-file tests/smoke-local.php` a partir da pasta do plugin. Com o site iniciado, execute `node tests/concurrency-local.mjs`. Os scripts de semente e integração verificam se estão na instalação AgendaPro do Local. O teste de concorrência usa a porta 10011 por padrão; ajuste `AGENDAPRO_PORT` se necessário. Ele deixa uma reserva fictícia pendente para inspeção no painel.
-
-Limitações: uma agenda, sem pagamentos, notificações por e-mail, integração com calendário ou reagendamento pelo cliente. Horários de verão com hora local repetida exigem teste específico no fuso da instalação antes de uso em produção. O limite de tentativas usa transients do WordPress e pode ser complementado com proteção de borda em sites públicos.
-
-## Estrutura
-
-`includes/` contém persistência, disponibilidade, reservas, REST e painel. `public/` contém shortcode e interface. `admin/` contém o estilo restrito às páginas do plugin. Consulte [arquitetura](docs/architecture.md) para o fluxo e as decisões técnicas. A especificação original está em `../PROJETO_03_AGENDAPRO.md`.
-
-## Licença
-
-GPL-2.0-or-later. Projeto demonstrativo, sem clientes reais.
+Veja [arquitetura](docs/architecture.md) para as decisões técnicas. Este é um projeto demonstrativo, sem clientes reais. Licença GPL-2.0-or-later.

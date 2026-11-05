@@ -1,10 +1,10 @@
-# Arquitetura do MVP
+# Arquitetura do SvDt
 
 ## Fluxo público
 
 ```mermaid
 flowchart LR
-  UI[Shortcode e JS] --> Services[GET serviços]
+  UI[Shortcode SvDt e fluxo JS] --> Services[GET serviços]
   UI --> Slots[GET disponibilidade]
   UI --> Create[POST reserva]
   Slots --> Schedule[AgendaPro_Schedule]
@@ -23,7 +23,7 @@ flowchart LR
 - `agendapro_blocked_dates`: dias inteiros sem atendimento.
 - `agendapro_bookings`: dados de contato, intervalo ocupado e estado.
 
-Os nomes físicos recebem `$wpdb->prefix`. A migração é versionada pela opção `agendapro_db_version` e usa `dbDelta()`.
+Os nomes físicos recebem `$wpdb->prefix`. O prefixo interno `agendapro_` foi preservado na mudança de marca para não perder reservas existentes. A migração é versionada pela opção `agendapro_db_version` e usa `dbDelta()`.
 
 ## Segurança e escopo
 

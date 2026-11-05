@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: AgendaPro
- * Description: Agendamentos de serviços com uma agenda, disponibilidade e gestão no WordPress.
- * Version: 0.1.1
+ * Plugin Name: SvDt
+ * Description: Uma experiência de agendamento com serviços, disponibilidade e gestão no WordPress.
+ * Version: 0.2.1
  * Requires at least: 6.2
  * Requires PHP: 8.0
  * Text Domain: agendapro
@@ -10,7 +10,7 @@
 
 defined('ABSPATH') || exit;
 
-define('AGENDAPRO_VERSION', '0.1.1');
+define('AGENDAPRO_VERSION', '0.2.1');
 define('AGENDAPRO_PATH', plugin_dir_path(__FILE__));
 define('AGENDAPRO_URL', plugin_dir_url(__FILE__));
 
@@ -34,14 +34,25 @@ add_action('plugins_loaded', static function () {
     (new AgendaPro_REST())->register();
     (new AgendaPro_Admin())->register();
     add_shortcode('agendapro_booking', 'agendapro_render_shortcode');
+    add_shortcode('svdt_booking', 'agendapro_render_shortcode');
+    add_filter('theme_page_templates', static function (array $templates): array {
+        $templates['svdt-showcase.php'] = 'SvDt · Página de reservas';
+        return $templates;
+    });
+    add_filter('template_include', static function (string $template): string {
+        if (is_page() && get_page_template_slug(get_queried_object_id()) === 'svdt-showcase.php') {
+            return AGENDAPRO_PATH . 'public/showcase-template.php';
+        }
+        return $template;
+    });
 });
 
 function agendapro_render_shortcode(): string
 {
     wp_enqueue_style('agendapro-booking', AGENDAPRO_URL . 'public/booking.css', array(), AGENDAPRO_VERSION);
     wp_enqueue_script('agendapro-booking', AGENDAPRO_URL . 'public/booking.js', array(), AGENDAPRO_VERSION, true);
-    wp_add_inline_script('agendapro-booking', 'window.AgendaPro=' . wp_json_encode(array(
-        'api' => esc_url_raw(rest_url('agendapro/v1/')),
+    wp_add_inline_script('agendapro-booking', 'window.SvDt=' . wp_json_encode(array(
+        'api' => esc_url_raw(rest_url('svdt/v1/')),
         'today' => current_datetime()->format('Y-m-d'),
     )) . ';', 'before');
     ob_start();

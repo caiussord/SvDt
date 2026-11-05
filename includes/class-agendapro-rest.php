@@ -6,21 +6,23 @@ final class AgendaPro_REST
     public function register(): void
     {
         add_action('rest_api_init', function () {
-            register_rest_route('agendapro/v1', '/services', array(
+            foreach (array('svdt/v1', 'agendapro/v1') as $namespace) {
+            register_rest_route($namespace, '/services', array(
                 'methods' => 'GET', 'callback' => array($this, 'services'), 'permission_callback' => '__return_true',
             ));
-            register_rest_route('agendapro/v1', '/availability', array(
+            register_rest_route($namespace, '/availability', array(
                 'methods' => 'GET', 'callback' => array($this, 'availability'), 'permission_callback' => '__return_true',
             ));
-            register_rest_route('agendapro/v1', '/bookings', array(
+            register_rest_route($namespace, '/bookings', array(
                 'methods' => 'POST', 'callback' => array($this, 'create'), 'permission_callback' => '__return_true',
             ));
-            register_rest_route('agendapro/v1', '/admin/bookings', array(
+            register_rest_route($namespace, '/admin/bookings', array(
                 'methods' => 'GET', 'callback' => array($this, 'admin_bookings'), 'permission_callback' => array($this, 'admin_permission'),
             ));
-            register_rest_route('agendapro/v1', '/admin/bookings/(?P<id>\d+)', array(
+            register_rest_route($namespace, '/admin/bookings/(?P<id>\d+)', array(
                 'methods' => 'PATCH', 'callback' => array($this, 'update_booking'), 'permission_callback' => array($this, 'admin_permission'),
             ));
+            }
         });
     }
 
