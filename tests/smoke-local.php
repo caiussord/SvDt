@@ -1,7 +1,7 @@
 <?php
 // Integration smoke test. Run with wp eval-file tests/smoke-local.php on agendapro.local.
-if (!defined('WP_CLI') || !WP_CLI || wp_parse_url(home_url(), PHP_URL_HOST) !== 'agendapro.local') {
-    throw new RuntimeException('Este teste só pode ser usado no site Local agendapro.local.');
+if (!defined('WP_CLI') || !WP_CLI || !str_contains(wp_normalize_path(ABSPATH), '/Local Sites/agendapro/')) {
+    throw new RuntimeException('Este teste só pode ser usado no site AgendaPro do Local.');
 }
 
 global $wpdb;

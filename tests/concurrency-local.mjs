@@ -1,10 +1,12 @@
 import http from 'node:http';
 
+const port = Number(process.env.AGENDAPRO_PORT || 10011);
+
 function request(method, path, body) {
   return new Promise((resolve, reject) => {
     const payload = body ? JSON.stringify(body) : '';
-    const req = http.request({ hostname: '127.0.0.1', port: 80, path, method, headers: {
-      Host: 'agendapro.local', 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload),
+    const req = http.request({ hostname: '127.0.0.1', port, path, method, headers: {
+      Host: `localhost:${port}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload),
     } }, res => {
       let text = '';
       res.on('data', chunk => { text += chunk; });

@@ -23,7 +23,7 @@ Projeto autoral demonstrativo para pequenos negócios que atendem com hora marca
 6. Crie uma página e adicione o shortcode `[agendapro_booking]`.
 7. Confira o fuso em **Configurações → Geral**. As datas e horas do plugin seguem esse fuso.
 
-Se o Local iniciar o site, mas `agendapro.local` mostrar “Servidor não encontrado”, falta o mapeamento no arquivo `hosts` do Windows. Feche o Local, abra-o como administrador e reinicie o site. Caso persista, abra `C:\Windows\System32\drivers\etc\hosts` como administrador e adicione `127.0.0.1 agendapro.local`. O servidor pode estar funcionando mesmo sem essa entrada; ela é necessária para o navegador resolver o nome.
+Nesta instalação Local, o endereço usado é **`http://localhost:10011/`**. Ele abre sem editar o arquivo `hosts` do Windows. O domínio `agendapro.local` continua configurado no Local, mas não resolve neste computador porque sua entrada não foi gravada no `hosts`. Se o Local atribuir outra porta depois de reiniciar o site, atualize as opções `home` e `siteurl` do WordPress para o novo `http://localhost:PORTA`.
 
 Requisitos: WordPress 6.2+, PHP 8.0+, MySQL com suporte a `GET_LOCK()` e uma única agenda de atendimento. As tabelas usam o prefixo real do WordPress e são criadas na ativação.
 
@@ -65,7 +65,7 @@ Outras capturas: [serviços](docs/screenshots/admin-services.png), [expediente](
 
 Validado no Local com WordPress 7.1.4, PHP 8.2.29 e MySQL 8.4.0. O plugin ativou, criou as quatro tabelas e respondeu aos endpoints REST. `tests/smoke-local.php` verificou reserva, conflito, transições de status, cancelamento, data bloqueada, serviço inativo e entrada inválida. Uma requisição pública sem autenticação ao endpoint administrativo recebeu HTTP 401. `tests/concurrency-local.mjs` enviou duas reservas simultâneas para o mesmo horário: uma recebeu HTTP 201 e a outra HTTP 409. O fluxo público também foi concluído em navegador no tamanho de celular. Todos os arquivos PHP passaram em `php -l` e o JavaScript em `node --check`.
 
-Para reproduzir os testes no Local, instale o plugin, execute `wp eval-file tests/seed-local.php` e depois `wp eval-file tests/smoke-local.php` a partir da pasta do plugin. Com o site iniciado, execute `node tests/concurrency-local.mjs`. Os scripts de semente e integração verificam se o domínio é `agendapro.local`. O teste de concorrência deixa uma reserva fictícia pendente para inspeção no painel.
+Para reproduzir os testes no Local, instale o plugin, execute `wp eval-file tests/seed-local.php` e depois `wp eval-file tests/smoke-local.php` a partir da pasta do plugin. Com o site iniciado, execute `node tests/concurrency-local.mjs`. Os scripts de semente e integração verificam se estão na instalação AgendaPro do Local. O teste de concorrência usa a porta 10011 por padrão; ajuste `AGENDAPRO_PORT` se necessário. Ele deixa uma reserva fictícia pendente para inspeção no painel.
 
 Limitações: uma agenda, sem pagamentos, notificações por e-mail, integração com calendário ou reagendamento pelo cliente. Horários de verão com hora local repetida exigem teste específico no fuso da instalação antes de uso em produção. O limite de tentativas usa transients do WordPress e pode ser complementado com proteção de borda em sites públicos.
 
