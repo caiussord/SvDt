@@ -3,7 +3,7 @@ Contributors: caiussord
 Tags: booking, appointments, scheduling
 Requires at least: 6.2
 Requires PHP: 8.0
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPLv2 or later
 
 Plugin autoral demonstrativo para reservas de serviços por profissionais autônomos e pequenas equipes.

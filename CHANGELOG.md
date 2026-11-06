@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1 — 2026-11-06
+
+- O campo Ordem aceita apenas inteiros de 0 a 999999, com validação no painel e no servidor.
+
 ## 2.0.0 — 2026-11-06
 
 - Profissionais, serviços habilitados, expediente e folgas individuais no painel.

@@ -6,8 +6,8 @@ if (!defined('WP_CLI') || !WP_CLI || !str_contains(wp_normalize_path(ABSPATH), '
 
 global $wpdb;
 $service = SvDt_DB::services()[0] ?? null;
-$default_id = (int) get_option('svdt_default_professional_id');
-if (!$service || !SvDt_DB::professional($default_id)) throw new RuntimeException('Agenda padrão indisponível.');
+$first_id = $service ? (int) (SvDt_DB::professionals(true, (int) $service->id)[0]->id ?? 0) : 0;
+if (!$service || !$first_id) throw new RuntimeException('Agenda ativa indisponível.');
 $professionals = SvDt_DB::table('professionals');
 $links = SvDt_DB::table('professional_services');
 $hours = SvDt_DB::table('professional_hours');
@@ -21,12 +21,12 @@ try {
     if (!$wpdb->insert($professionals, array('name' => 'Teste equipe temporário', 'description' => '', 'active' => 1, 'sort_order' => 99, 'created_at' => current_time('mysql')))) throw new RuntimeException('Falha ao criar profissional de teste.');
     $second_id = (int) $wpdb->insert_id;
     if (!$wpdb->insert($links, array('professional_id' => $second_id, 'service_id' => $service->id))) throw new RuntimeException('Falha ao vincular serviço de teste.');
-    if ($wpdb->query($wpdb->prepare("INSERT INTO $hours (professional_id,weekday,start_time,end_time,active) SELECT %d,weekday,start_time,end_time,active FROM $hours WHERE professional_id=%d", $second_id, $default_id)) === false) throw new RuntimeException('Falha ao copiar expediente de teste.');
+    if ($wpdb->query($wpdb->prepare("INSERT INTO $hours (professional_id,weekday,start_time,end_time,active) SELECT %d,weekday,start_time,end_time,active FROM $hours WHERE professional_id=%d", $second_id, $first_id)) === false) throw new RuntimeException('Falha ao copiar expediente de teste.');
     $date = null;
     $time = null;
     for ($offset = 7; $offset <= 20; $offset++) {
         $candidate = current_datetime()->modify('+' . $offset . ' days')->format('Y-m-d');
-        $first_slots = SvDt_Schedule::slots((int) $service->id, $candidate, $default_id);
+        $first_slots = SvDt_Schedule::slots((int) $service->id, $candidate, $first_id);
         $second_slots = SvDt_Schedule::slots((int) $service->id, $candidate, $second_id);
         if (is_wp_error($first_slots) || is_wp_error($second_slots)) throw new RuntimeException('Consulta de disponibilidade falhou.');
         $common = array_values(array_intersect($first_slots, $second_slots));
@@ -36,7 +36,7 @@ try {
     $legacy = SvDt_DB::resolve_professional((int) $service->id);
     if (!is_wp_error($legacy) || $legacy->get_error_code() !== 'professional_required') throw new RuntimeException('Escolha obrigatória de profissional não foi exigida.');
     $data = array('service_id' => (int) $service->id, 'date' => $date, 'time' => $time, 'customer_name' => 'Cliente Teste Equipe', 'customer_email' => 'teste@example.com', 'customer_phone' => '11999999999', 'notes' => 'Teste temporário');
-    $first = SvDt_Bookings::create($data + array('professional_id' => $default_id));
+    $first = SvDt_Bookings::create($data + array('professional_id' => $first_id));
     if (is_wp_error($first)) throw new RuntimeException('Primeira reserva falhou: ' . $first->get_error_message());
     $booking_ids[] = (int) substr($first['reference'], 3);
     if (!in_array($time, SvDt_Schedule::slots((int) $service->id, $date, $second_id), true)) throw new RuntimeException('Reserva de um profissional bloqueou o outro.');
@@ -56,7 +56,7 @@ try {
     $duplicate = SvDt_Bookings::create($data + array('professional_id' => $second_id));
     if (!is_wp_error($duplicate) || $duplicate->get_error_code() !== 'slot_unavailable') throw new RuntimeException('Sobreposição no mesmo profissional foi aceita.');
     delete_transient('svdt_rate_' . md5('127.0.0.1'));
-    foreach (array('SVDT_SERVICE_ID' => $service->id, 'SVDT_FIRST_PROFESSIONAL_ID' => $default_id, 'SVDT_SECOND_PROFESSIONAL_ID' => $second_id, 'SVDT_DATE' => $date, 'SVDT_TEST_MARKER' => $concurrency_marker) as $key => $value) putenv($key . '=' . $value);
+    foreach (array('SVDT_SERVICE_ID' => $service->id, 'SVDT_FIRST_PROFESSIONAL_ID' => $first_id, 'SVDT_SECOND_PROFESSIONAL_ID' => $second_id, 'SVDT_DATE' => $date, 'SVDT_TEST_MARKER' => $concurrency_marker) as $key => $value) putenv($key . '=' . $value);
     $pipes = array();
     $process = proc_open(array('node', __DIR__ . '/team-concurrency-local.mjs'), array(1 => array('pipe', 'w'), 2 => array('pipe', 'w')), $pipes);
     if (!is_resource($process)) throw new RuntimeException('Não foi possível iniciar o teste HTTP de concorrência.');
@@ -75,7 +75,7 @@ try {
     if (!$wpdb->insert($blocks, array('professional_id' => $second_id, 'blocked_date' => $date, 'reason' => 'Teste'))) throw new RuntimeException('Falha ao criar folga de teste.');
     $block_id = (int) $wpdb->insert_id;
     if (SvDt_Schedule::slots((int) $service->id, $date, $second_id) !== array()) throw new RuntimeException('Folga individual não bloqueou o profissional.');
-    if (!SvDt_Schedule::slots((int) $service->id, $date, $default_id)) throw new RuntimeException('Folga individual bloqueou a outra agenda.');
+    if (!SvDt_Schedule::slots((int) $service->id, $date, $first_id)) throw new RuntimeException('Folga individual bloqueou a outra agenda.');
     $wpdb->update($professionals, array('active' => 0), array('id' => $second_id));
     $inactive = SvDt_Schedule::slots((int) $service->id, $date, $second_id);
     if (!is_wp_error($inactive) || $inactive->get_error_code() !== 'invalid_professional') throw new RuntimeException('Profissional inativo foi aceito.');

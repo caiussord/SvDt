@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SvDt
  * Description: Uma experiência de agendamento com serviços, disponibilidade e gestão no WordPress.
- * Version: 2.0.0
+ * Version: 2.0.1
  * Requires at least: 6.2
  * Requires PHP: 8.0
  * Text Domain: svdt
@@ -10,7 +10,7 @@
 
 defined('ABSPATH') || exit;
 
-define('SVDT_VERSION', '2.0.0');
+define('SVDT_VERSION', '2.0.1');
 define('SVDT_DB_VERSION', '2.0.0');
 define('SVDT_BOOKING_WINDOW_DAYS', 90);
 define('SVDT_PATH', plugin_dir_path(__FILE__));

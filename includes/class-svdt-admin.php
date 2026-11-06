@@ -263,7 +263,7 @@ final class SvDt_Admin
         }
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="svdt-professional-form"><input type="hidden" name="action" value="svdt_save_professional"><input type="hidden" name="id" value="' . esc_attr($id) . '">';
         wp_nonce_field('svdt_save_professional');
-        echo '<label>Nome<input name="name" maxlength="150" required value="' . esc_attr($professional->name ?? '') . '"></label><label>Descrição curta<input name="description" maxlength="255" value="' . esc_attr($professional->description ?? '') . '"></label><div class="svdt-professional-meta"><label>Ordem<input type="number" name="sort_order" value="' . esc_attr($professional->sort_order ?? 0) . '"></label><label class="svdt-check"><input type="checkbox" name="active" value="1" ' . checked($professional->active ?? 1, 1, false) . '> Ativo para reservas</label></div>';
+        echo '<label>Nome<input name="name" maxlength="150" required value="' . esc_attr($professional->name ?? '') . '"></label><label>Descrição curta<input name="description" maxlength="255" value="' . esc_attr($professional->description ?? '') . '"></label><div class="svdt-professional-meta"><label>Ordem<input type="number" name="sort_order" min="0" step="1" required value="' . esc_attr($professional->sort_order ?? 0) . '"><small>Menor número aparece primeiro.</small></label><label class="svdt-check"><input type="checkbox" name="active" value="1" ' . checked($professional->active ?? 1, 1, false) . '> Ativo para reservas</label></div>';
         echo '<fieldset><legend>Serviços habilitados</legend><div class="svdt-service-checks">';
         foreach ($services as $service) {
             echo '<label><input type="checkbox" name="services[]" value="' . esc_attr($service->id) . '" ' . checked(in_array((int) $service->id, $links, true), true, false) . '> ' . esc_html($service->name) . '</label>';
@@ -280,7 +280,9 @@ final class SvDt_Admin
         $id = absint($_POST['id'] ?? 0);
         $name = sanitize_text_field(wp_unslash($_POST['name'] ?? ''));
         $description = sanitize_text_field(wp_unslash($_POST['description'] ?? ''));
-        $order = (int) ($_POST['sort_order'] ?? 0);
+        $order_input = sanitize_text_field(wp_unslash($_POST['sort_order'] ?? '0'));
+        if (!preg_match('/^\d{1,6}$/', $order_input)) $this->redirect('svdt-professionals', 'A ordem deve ser um número inteiro entre 0 e 999999.', false);
+        $order = (int) $order_input;
         $selected = array_values(array_unique(array_filter(array_map('absint', (array) ($_POST['services'] ?? array())))));
         if (!$name || strlen($name) > 150 || strlen($description) > 255) $this->redirect('svdt-professionals', 'Dados do profissional inválidos.', false);
         foreach ($selected as $service_id) {
