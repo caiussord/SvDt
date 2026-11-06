@@ -47,6 +47,8 @@ O shortcode antigo `[agendapro_booking]` continua aceito para preservar páginas
 
 Nesta instalação Local, a demonstração abre em **`http://localhost:10011/`** e o painel em **`http://localhost:10011/wp-admin/`**. O domínio `agendapro.local` cadastrado no Local não resolve neste Windows porque falta sua entrada no arquivo `hosts`.
 
+Após entrar no WordPress como administrador, use **SvDt → Agendamentos**, **Serviços** e **Disponibilidade**. A página pública também mostra o atalho **Painel SvDt** no cabeçalho apenas para administradores autenticados. A área de gestão faz parte do painel WordPress; não é uma página pública separada.
+
 ## API
 
 | Método | Rota | Acesso |
