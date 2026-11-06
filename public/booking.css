@@ -63,3 +63,4 @@
 @media(max-width:700px){.svdt-site-actions{gap:12px}.svdt-site-cta{padding:9px 15px}.svdt-admin-link{font-size:10px}}
 @media(max-width:700px){.svdt-rail{position:static}.svdt-rail-summary{margin-top:0}}
 .svdt-service-card:hover,.svdt-service-card:active{transform:none}
+.svdt-selection-strip>span svg{display:block;width:15px;height:15px}
