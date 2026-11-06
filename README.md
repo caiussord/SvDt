@@ -77,11 +77,11 @@ Validado no Local com WordPress 7.1.4, PHP 8.2.29 e MySQL 8.4.0. Antes da migra�
 
 `tests/smoke-local.php` verificou o fluxo individual e as regras do MVP. `tests/team-local.php` criou e removeu uma equipe temporária; confirmou serviço incompatível, folga individual, duas reservas no mesmo horário para profissionais diferentes e conflito para o mesmo profissional. Requisições HTTP concorrentes produziram **201/409** na mesma agenda e **201/201** em agendas diferentes. O endpoint administrativo de profissionais respondeu **401** sem autenticação. No navegador, o cadastro de profissional, o expediente, a rejeição de intervalos sobrepostos e os fluxos público individual e em equipe passaram em desktop e celular. Os registros de teste foram removidos.
 
-Uma instalação limpa isolada do WordPress ativou o plugin, criou o profissional padrão, exibiu horários e gravou uma solicitação. Ela usou o MySQL do Local com prefixo de tabelas separado; as tabelas de teste foram removidas. Ainda é necessária uma verificação em hospedagem real. Mudanças de horário de verão em fusos que as adotam não foram testadas.
+Uma instalação limpa isolada do WordPress ativou o plugin, criou o profissional padrão, exibiu horários e gravou uma solicitação. Ela usou o MySQL do Local com prefixo de tabelas separado; as tabelas de teste foram removidas. A validação em hospedagem real continua pendente; siga a [lista de verificação para homologação](docs/hosting-validation.md). Mudanças de horário de verão em fusos que as adotam não foram testadas.
 
 Para reproduzir no Local: `wp eval-file tests/smoke-local.php` e `wp eval-file tests/team-local.php`. O segundo teste usa `node tests/team-concurrency-local.mjs` internamente e limpa seus dados ao terminar; ajuste `SVDT_PORT` se a porta local não for 10011. `tests/seed-local.php` prepara apenas a demonstração e não deve ser executado em uma instalação com dados reais. Com a tabela de reservas vazia, `wp eval-file tests/seed-showcase-local.php` cria cinco reservas fictícias para os profissionais já cadastrados, usando nomes naturais e contatos reservados para teste (`example.test`).
 
-Os scripts de teste acompanham o repositório de desenvolvimento; o ZIP distribuível contém o plugin e a documentação de uso.
+Os scripts de teste acompanham o repositório de desenvolvimento. O ZIP distribuível contém somente `svdt.php`, `uninstall.php`, `readme.txt`, `LICENSE`, `admin/`, `includes/` e `public/`, sob a pasta `svdt/`. Ele não inclui `.git`, testes, capturas, backups ou arquivos do ambiente Local.
 
 ## Privacidade e limites
 
