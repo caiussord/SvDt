@@ -17,7 +17,6 @@ $monday = current_datetime()->setTime(0, 0)->modify('next monday');
 $people = array(
     array('Mariana Costa', 'Jorge', 'Corte de cabelo', 0, '09:00', 'pending', 'mariana.costa@example.test', '11900000001'),
     array('Camila Ferreira', 'Guilherme', 'Hidratação capilar', 0, '09:00', 'pending', 'camila.ferreira@example.test', '11900000002'),
-    array('Patrícia Almeida', 'João', 'Corte e barba', 0, '09:00', 'pending', 'patricia.almeida@example.test', '11900000003'),
     array('André Ribeiro', 'Jorge', 'Barba', 1, '14:00', 'confirmed', 'andre.ribeiro@example.test', '11900000004'),
     array('Rafael Souza', 'Guilherme', 'Lavagem e finalização', 2, '15:00', 'confirmed', 'rafael.souza@example.test', '11900000005'),
     array('Lucas Martins', 'João', 'Acabamento de contorno', 3, '11:00', 'confirmed', 'lucas.martins@example.test', '11900000006'),
