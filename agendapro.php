@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SvDt
  * Description: Uma experiência de agendamento com serviços, disponibilidade e gestão no WordPress.
- * Version: 0.2.1
+ * Version: 0.2.2
  * Requires at least: 6.2
  * Requires PHP: 8.0
  * Text Domain: agendapro
@@ -10,7 +10,7 @@
 
 defined('ABSPATH') || exit;
 
-define('AGENDAPRO_VERSION', '0.2.1');
+define('AGENDAPRO_VERSION', '0.2.2');
 define('AGENDAPRO_PATH', plugin_dir_path(__FILE__));
 define('AGENDAPRO_URL', plugin_dir_url(__FILE__));
 
@@ -54,6 +54,7 @@ function agendapro_render_shortcode(): string
     wp_add_inline_script('agendapro-booking', 'window.SvDt=' . wp_json_encode(array(
         'api' => esc_url_raw(rest_url('svdt/v1/')),
         'today' => current_datetime()->format('Y-m-d'),
+        'serviceIcon' => esc_url_raw(AGENDAPRO_URL . 'public/assets/barber-shop.svg'),
     )) . ';', 'before');
     ob_start();
     include AGENDAPRO_PATH . 'public/booking.php';

@@ -65,7 +65,8 @@
           const button = document.createElement('button');
           button.type = 'button';
           button.className = 'svdt-service-card';
-          button.innerHTML = '<span class="svdt-service-top"><span class="svdt-service-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 2.5 18.9 13.1 29.5 16l-10.6 2.9L16 29.5l-2.9-10.6L2.5 16l10.6-2.9L16 2.5Z" stroke="currentColor" stroke-width="1.5"/></svg></span><span class="svdt-service-number"></span></span><span class="svdt-service-name"></span><span class="svdt-service-description"></span><span class="svdt-service-bottom"><span class="svdt-service-duration"></span><span class="svdt-service-action">Escolher <b aria-hidden="true">↗</b></span></span>';
+          button.innerHTML = '<span class="svdt-service-top"><span class="svdt-service-icon" aria-hidden="true"><img alt="" width="26" height="26"></span><span class="svdt-service-number"></span></span><span class="svdt-service-name"></span><span class="svdt-service-description"></span><span class="svdt-service-bottom"><span class="svdt-service-duration"></span><span class="svdt-service-action">Escolher</span></span>';
+          button.querySelector('.svdt-service-icon img').src = config.serviceIcon;
           button.querySelector('.svdt-service-number').textContent = `0${index + 1} / SERVIÇO`;
           button.querySelector('.svdt-service-name').textContent = service.name;
           button.querySelector('.svdt-service-description').textContent = service.description || 'Atendimento com hora marcada.';

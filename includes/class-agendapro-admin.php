@@ -37,7 +37,7 @@ final class AgendaPro_Admin
 
     private function header(string $title, string $description): void
     {
-        echo '<div class="wrap ag-admin"><div class="ag-admin-head"><div><span class="ag-eyebrow">SV·DT / GESTÃO</span><h1>' . esc_html($title) . '</h1><p>' . esc_html($description) . '</p></div><span class="ag-admin-brand">Sv<span>Dt.</span></span></div>';
+        echo '<div class="wrap ag-admin"><div class="ag-admin-head"><div><span class="ag-eyebrow">SV·DT / GESTÃO</span><h1>' . esc_html($title) . '</h1><p>' . esc_html($description) . '</p></div><img class="ag-admin-logo" src="' . esc_url(AGENDAPRO_URL . 'public/assets/logo-svdt.svg') . '" alt="SvDt" width="57" height="54"></div>';
         if (isset($_GET['notice'])) {
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html(sanitize_text_field(wp_unslash($_GET['notice']))) . '</p></div>';
         }
@@ -81,7 +81,7 @@ final class AgendaPro_Admin
         }
         echo '</select></label><button class="button button-primary">Filtrar</button></form>';
         echo '<div class="ag-panel ag-agenda-panel"><div class="ag-agenda-heading"><div><span>LINHA DO TEMPO</span><h2>Reservas de ' . esc_html(AgendaPro_Schedule::parse_date($date)->format('d/m/Y')) . '</h2></div><strong>' . count($rows) . ' ' . (count($rows) === 1 ? 'registro' : 'registros') . '</strong></div>';
-        if (!$rows) echo '<div class="ag-empty"><span aria-hidden="true">✦</span><strong>Um dia livre por aqui.</strong><p>Nenhum agendamento encontrado para os filtros escolhidos.</p></div>';
+        if (!$rows) echo '<div class="ag-empty"><strong>Um dia livre por aqui.</strong><p>Nenhum agendamento encontrado para os filtros escolhidos.</p></div>';
         else {
             echo '<div class="ag-booking-list">';
             foreach ($rows as $row) {
