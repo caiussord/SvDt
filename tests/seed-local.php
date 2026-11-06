@@ -7,27 +7,41 @@ if (!defined('WP_CLI') || !WP_CLI || !str_contains(wp_normalize_path(ABSPATH), '
 global $wpdb;
 $services = AgendaPro_DB::table('services');
 $hours = AgendaPro_DB::table('business_hours');
-$legacy_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM $services WHERE name = %s", 'Consultoria inicial'));
-if ($legacy_id && !$wpdb->get_var($wpdb->prepare("SELECT id FROM $services WHERE name = %s", 'Barba completa'))) {
-    $wpdb->update($services, array(
-        'name' => 'Barba completa', 'description' => 'Cuidado e acabamento para sua barba.',
-        'duration_minutes' => 30, 'buffer_minutes' => 15,
-    ), array('id' => $legacy_id));
+$bookings = AgendaPro_DB::table('bookings');
+foreach (array(
+    'Corte clássico' => 'Corte de cabelo',
+    'Barba completa' => 'Barba',
+    'Consultoria inicial' => 'Barba',
+) as $old_name => $new_name) {
+    $old_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM $services WHERE name = %s", $old_name));
+    $new_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM $services WHERE name = %s", $new_name));
+    if ($old_id && !$new_id) {
+        $wpdb->update($services, array('name' => $new_name), array('id' => $old_id));
+    }
+}
+foreach (array('Corte degradê', 'Corte social', 'Barba com toalha quente') as $old_name) {
+    $old_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM $services WHERE name = %s", $old_name));
+    if (!$old_id) continue;
+    $has_bookings = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $bookings WHERE service_id = %d", $old_id));
+    if ($has_bookings) $wpdb->update($services, array('active' => 0), array('id' => $old_id));
+    else $wpdb->delete($services, array('id' => $old_id));
 }
 foreach (array(
-    array('Barba completa', 'Cuidado e acabamento para sua barba.', 30, 15),
-    array('Corte clássico', 'Um atendimento completo, no seu ritmo.', 45, 15),
-    array('Corte degradê', 'Transição precisa e acabamento personalizado.', 60, 15),
-    array('Corte e barba', 'Visual completo em uma única visita.', 75, 15),
+    array('Barba', 'Modelagem e acabamento para sua barba.', 30, 15),
+    array('Corte de cabelo', 'Clássico, degradê ou social. Diga o estilo desejado nas observações.', 60, 15),
+    array('Corte e barba', 'Cabelo e barba em uma única visita.', 90, 15),
     array('Acabamento de contorno', 'Ajuste das linhas do cabelo e da barba.', 20, 10),
     array('Sobrancelha', 'Alinhamento discreto para finalizar o visual.', 15, 5),
-    array('Corte social', 'Corte versátil com acabamento alinhado.', 40, 10),
-    array('Barba com toalha quente', 'Modelagem da barba com preparo e finalização cuidadosos.', 45, 15),
     array('Hidratação capilar', 'Tratamento para fios mais macios e bem cuidados.', 30, 10),
     array('Lavagem e finalização', 'Lavagem e styling para sair pronto.', 25, 5),
 ) as [$name, $description, $duration, $buffer]) {
     $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM $services WHERE name = %s", $name));
-    if (!$exists) {
+    if ($exists) {
+        $wpdb->update($services, array(
+            'description' => $description, 'duration_minutes' => $duration,
+            'buffer_minutes' => $buffer, 'active' => 1,
+        ), array('id' => $exists));
+    } else {
         $wpdb->insert($services, array(
             'name' => $name, 'description' => $description,
             'duration_minutes' => $duration, 'buffer_minutes' => $buffer,

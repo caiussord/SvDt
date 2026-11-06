@@ -6,6 +6,7 @@ Plugin WordPress autoral demonstrativo para negócios que atendem com hora marca
 
 ## Experiência
 
+- No catálogo de demonstração, **Corte de cabelo** reúne estilos como clássico, degradê e social; o cliente informa a preferência nas observações. **Barba** aparece como um único serviço.
 - A agenda aparece após a escolha do serviço e mostra apenas horários válidos para sua duração.
 - Um horário selecionado abre o formulário; voltar preserva as escolhas anteriores.
 - O resumo e o indicador de progresso acompanham cada etapa.
