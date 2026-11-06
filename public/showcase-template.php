@@ -11,7 +11,6 @@ wp_enqueue_style('svdt-booking', SVDT_URL . 'public/booking.css', array(), SVDT_
     <a class="svdt-logo" href="<?php echo esc_url(home_url('/')); ?>" aria-label="SvDt, início"><img src="<?php echo esc_url(SVDT_URL . 'public/assets/logo-svdt.svg'); ?>" alt="" width="38" height="36"><span>SvDt</span></a>
     <span class="svdt-site-label">SAVE THE DATE · SEU TEMPO BEM MARCADO</span>
     <nav class="svdt-site-actions" aria-label="Acesso rápido">
-      <?php if (current_user_can('manage_options')) : ?><a class="svdt-admin-link" href="<?php echo esc_url(admin_url('admin.php?page=svdt')); ?>">Painel SvDt</a><?php endif; ?>
       <a class="svdt-site-cta" href="#svdt-booking">Agendar agora</a>
     </nav>
   </header>

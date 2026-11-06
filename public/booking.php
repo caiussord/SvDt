@@ -4,7 +4,7 @@
     <div class="svdt-hero-copy">
       <span class="svdt-overline">SAVE THE DATE · RESERVAS ONLINE</span>
       <h1>Seu tempo,<br><em>bem marcado.</em></h1>
-      <p>Escolha o cuidado que combina com você. O resto acontece em poucos passos, no seu ritmo.</p>
+      <p>Escolha o cuidado que combina com você.</p>
       <a href="#svdt-booking" class="svdt-hero-link">Encontrar meu horário</a>
     </div>
     <div class="svdt-hero-art" aria-hidden="true">
@@ -15,7 +15,7 @@
 
   <div class="svdt-workspace" id="svdt-booking">
     <aside class="svdt-rail" aria-label="Progresso e resumo da reserva">
-      <div class="svdt-rail-top"><span class="svdt-rail-caption">SUA RESERVA</span><strong>Vamos começar?</strong><p>Três escolhas rápidas para cuidar do seu tempo.</p></div>
+      <div class="svdt-rail-top"><span class="svdt-rail-caption">SUA RESERVA</span><strong>Vamos começar?</strong><p hidden></p></div>
       <ol class="svdt-progress">
         <li><button type="button" data-step-go="1" aria-current="step"><span class="svdt-progress-num">01</span><span><b>Serviço</b><small>O que você precisa</small></span></button></li>
         <li><button type="button" data-step-go="2" disabled><span class="svdt-progress-num">02</span><span><b>Data e horário</b><small>Quando fica melhor</small></span></button></li>
@@ -45,7 +45,7 @@
         <form data-booking-form class="svdt-contact"><div class="svdt-field-row"><label>Nome completo<input name="customer_name" autocomplete="name" maxlength="150" placeholder="Como podemos chamar você?" required></label><label>E-mail<input type="email" name="customer_email" autocomplete="email" maxlength="190" placeholder="voce@exemplo.com" required></label></div><label>Telefone<input type="tel" name="customer_phone" autocomplete="tel" maxlength="30" placeholder="(11) 99999-9999" required></label><label>Observações <small>opcional</small><textarea name="notes" maxlength="2000" rows="3" placeholder="Alguma preferência ou detalhe importante?"></textarea></label><div class="svdt-trap" aria-hidden="true"><label>Site da empresa<input name="company_website" tabindex="-1" autocomplete="off"></label></div><p class="svdt-privacy">Usaremos seus dados apenas para administrar esta solicitação.</p><div class="svdt-feedback" data-feedback role="status" aria-live="polite"></div><button type="submit" class="svdt-submit" data-submit>Enviar solicitação</button></form>
       </section>
 
-      <section class="svdt-success" data-success hidden role="status" aria-live="polite"><div class="svdt-success-icon" aria-hidden="true">✓</div><span class="svdt-section-index">PEDIDO RECEBIDO</span><h2>Sua hora foi marcada</h2><p>Recebemos sua solicitação. Guarde a referência abaixo para conversar com o estabelecimento.</p><div class="svdt-reference"><span>REFERÊNCIA</span><strong data-reference></strong></div><p class="svdt-success-note">O horário fica reservado provisoriamente até a confirmação.</p><button type="button" data-new>Fazer outra reserva</button></section>
+      <section class="svdt-success" data-success hidden role="status" aria-live="polite"><div class="svdt-success-icon" aria-hidden="true">✓</div><span class="svdt-section-index">PEDIDO RECEBIDO</span><h2>Solicitação de agendamento recebida</h2><p>Recebemos sua solicitação. Guarde a referência abaixo para conversar com o estabelecimento.</p><div class="svdt-reference"><span>REFERÊNCIA</span><strong data-reference></strong></div><p class="svdt-success-note">O horário fica reservado provisoriamente até a confirmação.</p><button type="button" data-new>Fazer outra reserva</button></section>
     </div>
   </div>
 </div>

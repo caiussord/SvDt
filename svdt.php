@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SvDt
  * Description: Uma experiência de agendamento com serviços, disponibilidade e gestão no WordPress.
- * Version: 0.3.1
+ * Version: 0.3.2
  * Requires at least: 6.2
  * Requires PHP: 8.0
  * Text Domain: svdt
@@ -10,7 +10,8 @@
 
 defined('ABSPATH') || exit;
 
-define('SVDT_VERSION', '0.3.1');
+define('SVDT_VERSION', '0.3.2');
+define('SVDT_BOOKING_WINDOW_DAYS', 90);
 define('SVDT_PATH', plugin_dir_path(__FILE__));
 define('SVDT_URL', plugin_dir_url(__FILE__));
 
@@ -53,6 +54,7 @@ function svdt_render_shortcode(): string
     wp_add_inline_script('svdt-booking', 'window.SvDt=' . wp_json_encode(array(
         'api' => esc_url_raw(rest_url('svdt/v1/')),
         'today' => current_datetime()->format('Y-m-d'),
+        'lastDate' => current_datetime()->setTime(0, 0)->modify('+' . SVDT_BOOKING_WINDOW_DAYS . ' days')->format('Y-m-d'),
         'serviceIcon' => esc_url_raw(SVDT_URL . 'public/assets/barber-shop.svg'),
         'serviceIcons' => array(
             'Acabamento de contorno' => esc_url_raw(SVDT_URL . 'public/assets/razor-barber.svg'),

@@ -29,9 +29,9 @@ final class SvDt_Admin
         check_admin_referer('svdt_' . $action);
     }
 
-    private function redirect(string $page, string $message): void
+    private function redirect(string $page, string $message, bool $success = true): void
     {
-        wp_safe_redirect(admin_url('admin.php?page=' . $page . '&notice=' . rawurlencode($message)));
+        wp_safe_redirect(admin_url('admin.php?page=' . $page . '&notice=' . rawurlencode($message) . '&notice_type=' . ($success ? 'success' : 'error')));
         exit;
     }
 
@@ -39,7 +39,8 @@ final class SvDt_Admin
     {
         echo '<div class="wrap svdt-admin"><div class="svdt-admin-head"><div><span class="svdt-eyebrow">SV·DT / GESTÃO</span><h1>' . esc_html($title) . '</h1><p>' . esc_html($description) . '</p></div><img class="svdt-admin-logo" src="' . esc_url(SVDT_URL . 'public/assets/logo-svdt.svg') . '" alt="SvDt" width="57" height="54"></div>';
         if (isset($_GET['notice'])) {
-            echo '<div class="notice notice-success is-dismissible"><p>' . esc_html(sanitize_text_field(wp_unslash($_GET['notice']))) . '</p></div>';
+            $notice_type = isset($_GET['notice_type']) && sanitize_key(wp_unslash($_GET['notice_type'])) === 'error' ? 'error' : 'success';
+            echo '<div class="notice notice-' . esc_attr($notice_type) . ' is-dismissible"><p>' . esc_html(sanitize_text_field(wp_unslash($_GET['notice']))) . '</p></div>';
         }
     }
 
@@ -155,7 +156,7 @@ final class SvDt_Admin
         $request->set_param('id', absint($_POST['id'] ?? 0));
         $request->set_param('status', sanitize_key(wp_unslash($_POST['status'] ?? '')));
         $result = (new SvDt_REST())->update_booking($request);
-        $this->redirect('svdt', is_wp_error($result) ? $result->get_error_message() : 'Agendamento atualizado.');
+        $this->redirect('svdt', is_wp_error($result) ? $result->get_error_message() : 'Agendamento atualizado.', !is_wp_error($result));
     }
 
     public function services_page(): void
@@ -185,11 +186,19 @@ final class SvDt_Admin
         $duration = absint($_POST['duration'] ?? 0);
         $buffer = absint($_POST['buffer'] ?? 0);
         if (!$name || strlen($name) > 150 || $duration < 5 || $duration > 480 || $buffer > 120) {
-            $this->redirect('svdt-services', 'Dados inválidos.');
+            $this->redirect('svdt-services', 'Dados inválidos.', false);
         }
         $data = array('name' => $name, 'description' => $description, 'duration_minutes' => $duration, 'buffer_minutes' => $buffer, 'active' => isset($_POST['active']) || !$id ? 1 : 0);
-        if ($id) $wpdb->update(SvDt_DB::table('services'), $data, array('id' => $id));
-        else $wpdb->insert(SvDt_DB::table('services'), $data + array('created_at' => current_time('mysql')));
+        $table = SvDt_DB::table('services');
+        if ($id) {
+            $result = $wpdb->update($table, $data, array('id' => $id));
+            if ($result === 0 && !$wpdb->get_var($wpdb->prepare("SELECT id FROM $table WHERE id = %d", $id))) {
+                $this->redirect('svdt-services', 'Serviço não encontrado.', false);
+            }
+        } else {
+            $result = $wpdb->insert($table, $data + array('created_at' => current_time('mysql')));
+        }
+        if ($result === false) $this->redirect('svdt-services', 'Não foi possível salvar o serviço.', false);
         $this->redirect('svdt-services', 'Serviço salvo.');
     }
 
@@ -197,7 +206,9 @@ final class SvDt_Admin
     {
         $this->guard('delete_service');
         global $wpdb;
-        $wpdb->update(SvDt_DB::table('services'), array('active' => 0), array('id' => absint($_POST['id'] ?? 0)));
+        $result = $wpdb->update(SvDt_DB::table('services'), array('active' => 0), array('id' => absint($_POST['id'] ?? 0)));
+        if ($result === false) $this->redirect('svdt-services', 'Não foi possível desativar o serviço.', false);
+        if ($result === 0) $this->redirect('svdt-services', 'Serviço não encontrado ou já desativado.', false);
         $this->redirect('svdt-services', 'Serviço desativado.');
     }
 
@@ -235,16 +246,17 @@ final class SvDt_Admin
         global $wpdb;
         $table = SvDt_DB::table('business_hours');
         if (!empty($_POST['delete_id'])) {
-            $wpdb->delete($table, array('id' => absint($_POST['delete_id'])));
+            $result = $wpdb->delete($table, array('id' => absint($_POST['delete_id'])));
         } else {
             $day = absint($_POST['weekday'] ?? 9);
             $start = sanitize_text_field(wp_unslash($_POST['start'] ?? ''));
             $end = sanitize_text_field(wp_unslash($_POST['end'] ?? ''));
             if ($day > 6 || !preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/', $start) || !preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/', $end) || $start >= $end) {
-                $this->redirect('svdt-schedule', 'Intervalo inválido.');
+                $this->redirect('svdt-schedule', 'Intervalo inválido.', false);
             }
-            $wpdb->insert($table, array('weekday' => $day, 'start_time' => $start . ':00', 'end_time' => $end . ':00', 'active' => 1));
+            $result = $wpdb->insert($table, array('weekday' => $day, 'start_time' => $start . ':00', 'end_time' => $end . ':00', 'active' => 1));
         }
+        if ($result === false || $result === 0) $this->redirect('svdt-schedule', 'Não foi possível atualizar o expediente.', false);
         $this->redirect('svdt-schedule', 'Expediente atualizado.');
     }
 
@@ -253,8 +265,9 @@ final class SvDt_Admin
         $this->guard('add_block');
         global $wpdb;
         $date = sanitize_text_field(wp_unslash($_POST['date'] ?? ''));
-        if (!SvDt_Schedule::parse_date($date)) $this->redirect('svdt-schedule', 'Data inválida.');
-        $wpdb->replace(SvDt_DB::table('blocked_dates'), array('blocked_date' => $date, 'reason' => sanitize_text_field(wp_unslash($_POST['reason'] ?? ''))));
+        if (!SvDt_Schedule::parse_date($date)) $this->redirect('svdt-schedule', 'Data inválida.', false);
+        $result = $wpdb->replace(SvDt_DB::table('blocked_dates'), array('blocked_date' => $date, 'reason' => sanitize_text_field(wp_unslash($_POST['reason'] ?? ''))));
+        if ($result === false || $result === 0) $this->redirect('svdt-schedule', 'Não foi possível bloquear a data.', false);
         $this->redirect('svdt-schedule', 'Data bloqueada.');
     }
 
@@ -262,7 +275,8 @@ final class SvDt_Admin
     {
         $this->guard('delete_block');
         global $wpdb;
-        $wpdb->delete(SvDt_DB::table('blocked_dates'), array('id' => absint($_POST['id'] ?? 0)));
+        $result = $wpdb->delete(SvDt_DB::table('blocked_dates'), array('id' => absint($_POST['id'] ?? 0)));
+        if ($result === false || $result === 0) $this->redirect('svdt-schedule', 'Não foi possível liberar a data.', false);
         $this->redirect('svdt-schedule', 'Data liberada.');
     }
 }

@@ -20,8 +20,12 @@ final class SvDt_Schedule
         if (!$service) {
             return new WP_Error('invalid_service', 'Serviço indisponível.', array('status' => 404));
         }
-        if ($day < current_datetime()->setTime(0, 0)) {
+        $today = current_datetime()->setTime(0, 0);
+        if ($day < $today) {
             return array();
+        }
+        if ($day > $today->modify('+' . SVDT_BOOKING_WINDOW_DAYS . ' days')) {
+            return new WP_Error('date_out_of_range', sprintf('Escolha uma data nos próximos %d dias.', SVDT_BOOKING_WINDOW_DAYS), array('status' => 400));
         }
         $blocked = SvDt_DB::table('blocked_dates');
         if ($wpdb->get_var($wpdb->prepare("SELECT id FROM $blocked WHERE blocked_date = %s", $date))) {

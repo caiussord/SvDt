@@ -34,6 +34,10 @@ try {
     $change->set_param('id', $booking_id);
     $change->set_param('status', 'confirmed');
     if (is_wp_error($controller->update_booking($change))) throw new RuntimeException('Confirmação falhou.');
+    $stale = $wpdb->update(SvDt_DB::table('bookings'), array('status' => 'cancelled'), array('id' => $booking_id, 'status' => 'pending'), array('%s'), array('%d', '%s'));
+    if ($stale !== 0 || $wpdb->get_var($wpdb->prepare('SELECT status FROM ' . SvDt_DB::table('bookings') . ' WHERE id = %d', $booking_id)) !== 'confirmed') {
+        throw new RuntimeException('Atualização condicional não protegeu o status confirmado.');
+    }
     $change->set_param('status', 'cancelled');
     if (is_wp_error($controller->update_booking($change))) throw new RuntimeException('Cancelamento falhou.');
     $released = SvDt_Schedule::slots((int) $service->id, $date);
@@ -51,7 +55,14 @@ try {
     if (!is_wp_error(SvDt_Schedule::slots((int) $service->id, $date))) throw new RuntimeException('Serviço inativo retornou horários.');
     $wpdb->update(SvDt_DB::table('services'), array('active' => $original_active), array('id' => $service->id));
     if (SvDt_Schedule::slots((int) $service->id, '2020-01-01') !== array()) throw new RuntimeException('Data passada retornou horários.');
-    WP_CLI::success('Reserva, conflito, estados, cancelamento, bloqueio, serviço inativo e entradas inválidas passaram.');
+    $last_allowed = current_datetime()->modify('+90 days')->format('Y-m-d');
+    if (is_wp_error(SvDt_Schedule::slots((int) $service->id, $last_allowed))) throw new RuntimeException('O último dia da janela foi rejeitado.');
+    $beyond = current_datetime()->modify('+91 days')->format('Y-m-d');
+    $outside = SvDt_Schedule::slots((int) $service->id, $beyond);
+    if (!is_wp_error($outside) || $outside->get_error_code() !== 'date_out_of_range') throw new RuntimeException('Data além de 90 dias foi aceita na disponibilidade.');
+    $outside_booking = SvDt_Bookings::create(array_replace($data, array('date' => $beyond)));
+    if (!is_wp_error($outside_booking) || $outside_booking->get_error_code() !== 'date_out_of_range') throw new RuntimeException('Data além de 90 dias foi aceita na reserva.');
+    WP_CLI::success('Reserva, conflito, estados, atualização condicional, limite de 90 dias, cancelamento, bloqueio, serviço inativo e entradas inválidas passaram.');
 } finally {
     if ($booking_id) $wpdb->delete(SvDt_DB::table('bookings'), array('id' => $booking_id));
     if ($block_id) $wpdb->delete(SvDt_DB::table('blocked_dates'), array('id' => $block_id));

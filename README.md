@@ -7,7 +7,7 @@ Plugin WordPress autoral demonstrativo para negócios que atendem com hora marca
 ## Experiência
 
 - No catálogo de demonstração, **Corte de cabelo** reúne estilos como clássico, degradê e social; o cliente informa a preferência nas observações. **Barba** aparece como um único serviço.
-- A agenda aparece após a escolha do serviço e mostra apenas horários válidos para sua duração.
+- A agenda aparece após a escolha do serviço e mostra apenas horários válidos para sua duração, dentro dos próximos 90 dias.
 - Um horário selecionado abre o formulário; voltar preserva as escolhas anteriores.
 - O resumo e o indicador de progresso acompanham cada etapa.
 - Estados de carregamento, vazio, erro e sucesso têm mensagens próprias.
@@ -29,7 +29,7 @@ Outras telas: [serviço no celular](docs/screenshots/svdt-mobile-step1.png), [da
 - Serviços com duração, intervalo após atendimento, descrição e estado ativo.
 - Expediente com múltiplos intervalos por dia e bloqueio de datas.
 - Disponibilidade com antecedência mínima de 60 minutos e passos de 30 minutos.
-- Reserva pública com status pendente, validação no servidor, honeypot e limite de tentativas por IP.
+- Solicitação pública com status pendente, validação no servidor, honeypot e limite de tentativas por IP; a tela de sucesso informa que ainda depende de confirmação.
 - Bloqueio MySQL por agenda durante a nova verificação e gravação, evitando reservas simultâneas sobrepostas.
 - Painel com calendário mensal que marca os dias com reservas, filtros por data, status e serviço; ações de confirmação, cancelamento e conclusão.
 - Endpoints REST públicos e administrativos.
@@ -48,7 +48,7 @@ Na atualização de uma instalação anterior, faça um backup do banco, desativ
 
 Nesta instalação Local, a demonstração abre em **`http://localhost:10011/`** e o painel em **`http://localhost:10011/wp-admin/`**.
 
-Após entrar no WordPress como administrador, use **SvDt → Agendamentos**, **Serviços** e **Disponibilidade** em `wp-admin/admin.php?page=svdt`. A página pública também mostra o atalho **Painel SvDt** no cabeçalho apenas para administradores autenticados. A área de gestão faz parte do painel WordPress; não é uma página pública separada.
+Após entrar no WordPress como administrador, use **SvDt → Agendamentos**, **Serviços** e **Disponibilidade** em `wp-admin/admin.php?page=svdt`. A área de gestão faz parte do painel WordPress; não é uma página pública separada.
 
 ## API
 
@@ -64,7 +64,7 @@ O corpo do POST contém `service_id`, `date`, `time`, `customer_name`, `customer
 
 ## Verificação
 
-Validado no Local com WordPress 7.1.4, PHP 8.2.29 e MySQL 8.4.0. Na migração para a versão 0.3.0, as quatro tabelas foram renomeadas e os 7 serviços e 10 agendamentos existentes foram preservados. O teste `tests/smoke-local.php` verificou reserva, conflitos, transições de status, cancelamento, data bloqueada, serviço inativo e entrada inválida. Duas requisições simultâneas para o mesmo horário produziram HTTP 201 e HTTP 409. O endpoint administrativo rejeitou acesso público com HTTP 401. No navegador, o fluxo avançou até o formulário com os assets carregados da pasta `svdt`.
+Validado no Local com WordPress 7.1.4, PHP 8.2.29 e MySQL 8.4.0. Na migração para a versão 0.3.0, as quatro tabelas foram renomeadas e os 7 serviços e 10 agendamentos existentes foram preservados. O teste `tests/smoke-local.php` verificou reserva, conflitos, transições de status, atualização condicional, limite de 90 dias, cancelamento, data bloqueada, serviço inativo e entrada inválida. Duas requisições simultâneas para o mesmo horário produziram HTTP 201 e HTTP 409. O endpoint administrativo rejeitou acesso público com HTTP 401. No navegador, o fluxo completo criou uma solicitação pendente, exibiu a nova mensagem e o registro de demonstração foi removido após a conferência.
 
 Para reproduzir: `wp eval-file tests/seed-local.php`, `wp eval-file tests/smoke-local.php` e `node tests/concurrency-local.mjs` no ambiente Local. O teste de concorrência usa a porta 10011 por padrão; ajuste `SVDT_PORT` se necessário. Ele deixa uma reserva fictícia pendente.
 

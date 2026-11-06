@@ -5,7 +5,9 @@
     const config = window.SvDt;
     if (!config?.api) return;
     const today = config.today;
+    const lastDate = config.lastDate;
     const todayDate = new Date(`${today}T12:00:00`);
+    const lastDay = new Date(`${lastDate}T12:00:00`);
     const state = { step: 1, service: null, date: null, time: null, month: new Date(todayDate.getFullYear(), todayDate.getMonth(), 1) };
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const ymd = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -37,7 +39,8 @@
       const title = $('.svdt-rail-top strong');
       const desc = $('.svdt-rail-top p');
       title.textContent = state.step === 1 ? 'Vamos começar?' : state.step === 2 ? 'Boa escolha.' : 'Último detalhe.';
-      desc.textContent = state.step === 1 ? 'Três escolhas rápidas para cuidar do seu tempo.' : state.step === 2 ? 'Agora encontre o melhor momento.' : 'Revise o horário e envie sua solicitação.';
+      desc.hidden = state.step === 1;
+      desc.textContent = state.step === 1 ? '' : state.step === 2 ? 'Agora encontre o melhor momento.' : 'Revise o horário e envie sua solicitação.';
     }
 
     function setStep(step, focus = true) {
@@ -100,7 +103,7 @@
       for (let day = 1; day <= total; day++) {
         const date = ymd(new Date(month.getFullYear(), month.getMonth(), day));
         const button = document.createElement('button'); button.type = 'button'; button.textContent = day;
-        button.disabled = date < today;
+        button.disabled = date < today || date > lastDate;
         button.classList.toggle('is-selected', date === state.date);
         button.setAttribute('aria-label', longDate(date));
         button.setAttribute('aria-pressed', String(date === state.date));
@@ -111,6 +114,7 @@
         grid.append(button);
       }
       $('[data-prev]').disabled = month.getFullYear() === todayDate.getFullYear() && month.getMonth() === todayDate.getMonth();
+      $('[data-next]').disabled = month.getFullYear() === lastDay.getFullYear() && month.getMonth() === lastDay.getMonth();
     }
 
     async function loadTimes() {

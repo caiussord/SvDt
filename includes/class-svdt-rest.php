@@ -105,8 +105,14 @@ final class SvDt_REST
         if ($status !== $booking->status && !in_array($status, $transitions[$booking->status] ?? array(), true)) {
             return new WP_Error('invalid_transition', 'Mudança de status não permitida.', array('status' => 409));
         }
-        if ($status !== $booking->status && $wpdb->update($table, array('status' => $status), array('id' => $id), array('%s'), array('%d')) === false) {
-            return new WP_Error('update_failed', 'Não foi possível atualizar o agendamento.', array('status' => 500));
+        if ($status !== $booking->status) {
+            $updated = $wpdb->update($table, array('status' => $status), array('id' => $id, 'status' => $booking->status), array('%s'), array('%d', '%s'));
+            if ($updated === false) {
+                return new WP_Error('update_failed', 'Não foi possível atualizar o agendamento.', array('status' => 500));
+            }
+            if ($updated === 0) {
+                return new WP_Error('booking_changed', 'O status foi alterado por outra operação. Atualize a página e tente novamente.', array('status' => 409));
+            }
         }
         return rest_ensure_response(array('id' => $id, 'status' => $status));
     }
