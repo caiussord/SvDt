@@ -1,6 +1,6 @@
 import http from 'node:http';
 
-const port = Number(process.env.AGENDAPRO_PORT || 10011);
+const port = Number(process.env.SVDT_PORT || 10011);
 
 function request(method, path, body) {
   return new Promise((resolve, reject) => {

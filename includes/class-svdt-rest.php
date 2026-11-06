@@ -1,28 +1,26 @@
 <?php
 defined('ABSPATH') || exit;
 
-final class AgendaPro_REST
+final class SvDt_REST
 {
     public function register(): void
     {
         add_action('rest_api_init', function () {
-            foreach (array('svdt/v1', 'agendapro/v1') as $namespace) {
-            register_rest_route($namespace, '/services', array(
+            register_rest_route('svdt/v1', '/services', array(
                 'methods' => 'GET', 'callback' => array($this, 'services'), 'permission_callback' => '__return_true',
             ));
-            register_rest_route($namespace, '/availability', array(
+            register_rest_route('svdt/v1', '/availability', array(
                 'methods' => 'GET', 'callback' => array($this, 'availability'), 'permission_callback' => '__return_true',
             ));
-            register_rest_route($namespace, '/bookings', array(
+            register_rest_route('svdt/v1', '/bookings', array(
                 'methods' => 'POST', 'callback' => array($this, 'create'), 'permission_callback' => '__return_true',
             ));
-            register_rest_route($namespace, '/admin/bookings', array(
+            register_rest_route('svdt/v1', '/admin/bookings', array(
                 'methods' => 'GET', 'callback' => array($this, 'admin_bookings'), 'permission_callback' => array($this, 'admin_permission'),
             ));
-            register_rest_route($namespace, '/admin/bookings/(?P<id>\d+)', array(
+            register_rest_route('svdt/v1', '/admin/bookings/(?P<id>\d+)', array(
                 'methods' => 'PATCH', 'callback' => array($this, 'update_booking'), 'permission_callback' => array($this, 'admin_permission'),
             ));
-            }
         });
     }
 
@@ -35,13 +33,13 @@ final class AgendaPro_REST
                 'description' => $row->description,
                 'duration_minutes' => (int) $row->duration_minutes,
             );
-        }, AgendaPro_DB::services());
+        }, SvDt_DB::services());
         return rest_ensure_response($items);
     }
 
     public function availability(WP_REST_Request $request): WP_REST_Response|WP_Error
     {
-        $slots = AgendaPro_Schedule::slots(absint($request['service_id']), sanitize_text_field((string) $request['date']));
+        $slots = SvDt_Schedule::slots(absint($request['service_id']), sanitize_text_field((string) $request['date']));
         return is_wp_error($slots) ? $slots : rest_ensure_response(array('slots' => $slots));
     }
 
@@ -51,13 +49,13 @@ final class AgendaPro_REST
             return new WP_Error('invalid_booking', 'Não foi possível enviar.', array('status' => 400));
         }
         $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
-        $key = 'agendapro_rate_' . md5($ip);
+        $key = 'svdt_rate_' . md5($ip);
         $attempts = (int) get_transient($key);
         if ($attempts >= 8) {
             return new WP_Error('rate_limited', 'Aguarde alguns minutos antes de tentar novamente.', array('status' => 429));
         }
         set_transient($key, $attempts + 1, 10 * MINUTE_IN_SECONDS);
-        $result = AgendaPro_Bookings::create($request->get_params());
+        $result = SvDt_Bookings::create($request->get_params());
         if (is_wp_error($result)) {
             return $result;
         }
@@ -72,13 +70,13 @@ final class AgendaPro_REST
     public function admin_bookings(WP_REST_Request $request): WP_REST_Response
     {
         global $wpdb;
-        $bookings = AgendaPro_DB::table('bookings');
-        $services = AgendaPro_DB::table('services');
+        $bookings = SvDt_DB::table('bookings');
+        $services = SvDt_DB::table('services');
         $date = sanitize_text_field((string) ($request['date'] ?? ''));
         $status = sanitize_text_field((string) ($request['status'] ?? ''));
         $where = array('1=1');
         $args = array();
-        if (AgendaPro_Schedule::parse_date($date)) {
+        if (SvDt_Schedule::parse_date($date)) {
             $where[] = 'DATE(b.starts_at) = %s';
             $args[] = $date;
         }
@@ -98,7 +96,7 @@ final class AgendaPro_REST
             return new WP_Error('invalid_status', 'Status inválido.', array('status' => 400));
         }
         $id = absint($request['id']);
-        $table = AgendaPro_DB::table('bookings');
+        $table = SvDt_DB::table('bookings');
         $booking = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $id));
         if (!$booking) {
             return new WP_Error('not_found', 'Agendamento não encontrado.', array('status' => 404));

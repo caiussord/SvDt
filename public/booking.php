@@ -9,7 +9,7 @@
     </div>
     <div class="svdt-hero-art" aria-hidden="true">
       <div class="svdt-orbit svdt-orbit-one"></div><div class="svdt-orbit svdt-orbit-two"></div>
-      <div class="svdt-art-center"><img src="<?php echo esc_url(AGENDAPRO_URL . 'public/assets/logo-svdt.svg'); ?>" alt="" width="186" height="175"></div>
+      <div class="svdt-art-center"><img src="<?php echo esc_url(SVDT_URL . 'public/assets/logo-svdt.svg'); ?>" alt="" width="186" height="175"></div>
     </div>
   </header>
 

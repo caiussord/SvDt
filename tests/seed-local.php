@@ -1,13 +1,13 @@
 <?php
 // Run with: wp eval-file tests/seed-local.php from the plugin directory.
-if (!defined('WP_CLI') || !WP_CLI || !str_contains(wp_normalize_path(ABSPATH), '/Local Sites/agendapro/')) {
+if (!defined('WP_CLI') || !WP_CLI || !str_contains(wp_normalize_path(ABSPATH), '/Local Sites/') || get_option('blogname') !== 'SvDt') {
     throw new RuntimeException('Este script só pode ser usado no site SvDt do Local.');
 }
 
 global $wpdb;
-$services = AgendaPro_DB::table('services');
-$hours = AgendaPro_DB::table('business_hours');
-$bookings = AgendaPro_DB::table('bookings');
+$services = SvDt_DB::table('services');
+$hours = SvDt_DB::table('business_hours');
+$bookings = SvDt_DB::table('bookings');
 foreach (array(
     'Corte clássico' => 'Corte de cabelo',
     'Barba completa' => 'Barba',

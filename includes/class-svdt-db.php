@@ -1,17 +1,18 @@
 <?php
 defined('ABSPATH') || exit;
 
-final class AgendaPro_DB
+final class SvDt_DB
 {
     public static function table(string $name): string
     {
         global $wpdb;
-        return $wpdb->prefix . 'agendapro_' . $name;
+        return $wpdb->prefix . 'svdt_' . $name;
     }
 
     public static function activate(): void
     {
         global $wpdb;
+        self::migrate_legacy();
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         $charset = $wpdb->get_charset_collate();
         $services = self::table('services');
@@ -62,12 +63,42 @@ final class AgendaPro_DB
             KEY status_starts (status,starts_at),
             KEY service_id (service_id)
         ) $charset;");
-        add_option('agendapro_min_notice_minutes', 60);
-        add_option('agendapro_slot_minutes', 30);
-        update_option('agendapro_db_version', AGENDAPRO_VERSION);
-        if (!wp_next_scheduled('agendapro_daily_cleanup')) {
-            wp_schedule_event(time() + DAY_IN_SECONDS, 'daily', 'agendapro_daily_cleanup');
+        add_option('svdt_min_notice_minutes', 60);
+        add_option('svdt_slot_minutes', 30);
+        update_option('svdt_db_version', SVDT_VERSION);
+        if (!wp_next_scheduled('svdt_daily_cleanup')) {
+            wp_schedule_event(time() + DAY_IN_SECONDS, 'daily', 'svdt_daily_cleanup');
         }
+    }
+
+    private static function migrate_legacy(): void
+    {
+        global $wpdb;
+        $renames = array();
+        foreach (array('services', 'business_hours', 'blocked_dates', 'bookings') as $name) {
+            $old = $wpdb->prefix . 'agendapro_' . $name;
+            $new = self::table($name);
+            $old_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($old))) === $old;
+            $new_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($new))) === $new;
+            if ($old_exists && $new_exists) {
+                throw new RuntimeException('Migração SvDt interrompida: tabelas antigas e novas coexistem.');
+            }
+            if ($old_exists) {
+                $renames[] = '`' . str_replace('`', '``', $old) . '` TO `' . str_replace('`', '``', $new) . '`';
+            }
+        }
+        if ($renames && $wpdb->query('RENAME TABLE ' . implode(', ', $renames)) === false) {
+            throw new RuntimeException('Não foi possível migrar as tabelas para SvDt.');
+        }
+        foreach (array('min_notice_minutes', 'slot_minutes') as $name) {
+            $old = get_option('agendapro_' . $name, null);
+            if ($old !== null && get_option('svdt_' . $name, null) === null) {
+                add_option('svdt_' . $name, $old);
+            }
+            delete_option('agendapro_' . $name);
+        }
+        delete_option('agendapro_db_version');
+        wp_clear_scheduled_hook('agendapro_daily_cleanup');
     }
 
     public static function cleanup(): void

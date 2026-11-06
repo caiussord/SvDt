@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 
-final class AgendaPro_Schedule
+final class SvDt_Schedule
 {
     public static function parse_date(string $value): ?DateTimeImmutable
     {
@@ -16,18 +16,18 @@ final class AgendaPro_Schedule
         if (!$day) {
             return new WP_Error('invalid_date', 'Data inválida.', array('status' => 400));
         }
-        $service = AgendaPro_DB::service($service_id);
+        $service = SvDt_DB::service($service_id);
         if (!$service) {
             return new WP_Error('invalid_service', 'Serviço indisponível.', array('status' => 404));
         }
         if ($day < current_datetime()->setTime(0, 0)) {
             return array();
         }
-        $blocked = AgendaPro_DB::table('blocked_dates');
+        $blocked = SvDt_DB::table('blocked_dates');
         if ($wpdb->get_var($wpdb->prepare("SELECT id FROM $blocked WHERE blocked_date = %s", $date))) {
             return array();
         }
-        $hours = AgendaPro_DB::table('business_hours');
+        $hours = SvDt_DB::table('business_hours');
         $weekday = (int) $day->format('w');
         $periods = $wpdb->get_results($wpdb->prepare(
             "SELECT start_time, end_time FROM $hours WHERE weekday = %d AND active = 1 ORDER BY start_time",
@@ -36,14 +36,14 @@ final class AgendaPro_Schedule
         if (!$periods) {
             return array();
         }
-        $bookings = AgendaPro_DB::table('bookings');
+        $bookings = SvDt_DB::table('bookings');
         $existing = $wpdb->get_results($wpdb->prepare(
             "SELECT starts_at, ends_at FROM $bookings WHERE starts_at < %s AND ends_at > %s AND status IN ('pending','confirmed')",
             $day->modify('+1 day')->format('Y-m-d H:i:s'), $day->format('Y-m-d H:i:s')
         ));
         $duration = (int) $service->duration_minutes + (int) $service->buffer_minutes;
-        $step = max(5, min(120, (int) get_option('agendapro_slot_minutes', 30)));
-        $notice = max(0, (int) get_option('agendapro_min_notice_minutes', 60));
+        $step = max(5, min(120, (int) get_option('svdt_slot_minutes', 30)));
+        $notice = max(0, (int) get_option('svdt_min_notice_minutes', 60));
         $earliest = current_datetime()->modify('+' . $notice . ' minutes');
         $slots = array();
         foreach ($periods as $period) {
