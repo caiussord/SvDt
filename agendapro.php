@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SvDt
  * Description: Uma experiência de agendamento com serviços, disponibilidade e gestão no WordPress.
- * Version: 0.2.4
+ * Version: 0.2.5
  * Requires at least: 6.2
  * Requires PHP: 8.0
  * Text Domain: agendapro
@@ -10,7 +10,7 @@
 
 defined('ABSPATH') || exit;
 
-define('AGENDAPRO_VERSION', '0.2.4');
+define('AGENDAPRO_VERSION', '0.2.5');
 define('AGENDAPRO_PATH', plugin_dir_path(__FILE__));
 define('AGENDAPRO_URL', plugin_dir_url(__FILE__));
 
