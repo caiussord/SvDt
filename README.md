@@ -31,7 +31,7 @@ Outras telas: [serviço no celular](docs/screenshots/svdt-mobile-step1.png), [da
 - Disponibilidade com antecedência mínima de 60 minutos e passos de 30 minutos.
 - Reserva pública com status pendente, validação no servidor, honeypot e limite de tentativas por IP.
 - Bloqueio MySQL por agenda durante a nova verificação e gravação, evitando reservas simultâneas sobrepostas.
-- Painel com filtros por data, status e serviço; ações de confirmação, cancelamento e conclusão.
+- Painel com calendário mensal que marca os dias com reservas, filtros por data, status e serviço; ações de confirmação, cancelamento e conclusão.
 - Endpoints REST públicos e administrativos.
 
 ## Instalação

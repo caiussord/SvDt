@@ -80,6 +80,7 @@ final class SvDt_Admin
             echo '<option value="' . esc_attr($service->id) . '" ' . selected($service_id, (int) $service->id, false) . '>' . esc_html($service->name) . '</option>';
         }
         echo '</select></label><button class="button button-primary">Filtrar</button></form>';
+        $this->booking_calendar($date, $status, $service_id);
         echo '<div class="svdt-panel svdt-agenda-panel"><div class="svdt-agenda-heading"><div><span>LINHA DO TEMPO</span><h2>Reservas de ' . esc_html(SvDt_Schedule::parse_date($date)->format('d/m/Y')) . '</h2></div><strong>' . count($rows) . ' ' . (count($rows) === 1 ? 'registro' : 'registros') . '</strong></div>';
         if (!$rows) echo '<div class="svdt-empty"><strong>Um dia livre por aqui.</strong><p>Nenhum agendamento encontrado para os filtros escolhidos.</p></div>';
         else {
@@ -99,6 +100,52 @@ final class SvDt_Admin
             echo '</div>';
         }
         echo '</div></div>';
+    }
+
+    private function booking_calendar(string $date, string $status, int $service_id): void
+    {
+        global $wpdb;
+        $requested_month = isset($_GET['month']) ? sanitize_text_field(wp_unslash($_GET['month'])) : '';
+        $month = preg_match('/^\d{4}-(?:0[1-9]|1[0-2])$/', $requested_month)
+            ? SvDt_Schedule::parse_date($requested_month . '-01') : null;
+        $month ??= SvDt_Schedule::parse_date(substr($date, 0, 7) . '-01');
+        $next_month = $month->modify('+1 month');
+        $table = SvDt_DB::table('bookings');
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT DATE(starts_at) AS day, COUNT(*) AS total FROM $table
+             WHERE starts_at >= %s AND starts_at < %s
+             AND status IN ('pending', 'confirmed', 'completed')
+             GROUP BY DATE(starts_at)",
+            $month->format('Y-m-d H:i:s'), $next_month->format('Y-m-d H:i:s')
+        ));
+        $booked_days = array();
+        foreach ($rows as $row) $booked_days[$row->day] = (int) $row->total;
+        $base_query = array('page' => 'svdt', 'date' => $date, 'status' => $status, 'service_id' => $service_id);
+        $month_url = static fn(string $value): string => add_query_arg(array_merge($base_query, array('date' => $value . '-01', 'month' => $value)), admin_url('admin.php'));
+
+        echo '<section class="svdt-calendar-panel" aria-labelledby="svdt-calendar-title"><div class="svdt-calendar-main">';
+        echo '<div class="svdt-calendar-heading"><div><span>AGENDA DO MÊS</span><h2 id="svdt-calendar-title">' . esc_html(ucfirst(wp_date('F Y', $month->getTimestamp(), wp_timezone()))) . '</h2></div><div class="svdt-calendar-nav">';
+        echo '<a href="' . esc_url($month_url($month->modify('-1 month')->format('Y-m'))) . '" aria-label="Mês anterior">Anterior</a>';
+        echo '<a href="' . esc_url($month_url($next_month->format('Y-m'))) . '" aria-label="Próximo mês">Próximo</a></div></div>';
+        echo '<div class="svdt-admin-calendar" aria-label="Dias do mês">';
+        foreach (array('Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom') as $weekday) {
+            echo '<span class="svdt-admin-calendar-weekday">' . esc_html($weekday) . '</span>';
+        }
+        for ($blank = 1; $blank < (int) $month->format('N'); $blank++) {
+            echo '<span class="svdt-admin-calendar-blank" aria-hidden="true"></span>';
+        }
+        for ($day = 1, $total = (int) $next_month->modify('-1 day')->format('j'); $day <= $total; $day++) {
+            $day_date = $month->modify('+' . ($day - 1) . ' days')->format('Y-m-d');
+            $count = $booked_days[$day_date] ?? 0;
+            $classes = 'svdt-admin-calendar-day' . ($day_date === $date ? ' is-selected' : '') . ($count ? ' has-bookings' : '');
+            $label = $day . ' de ' . wp_date('F', $month->getTimestamp(), wp_timezone());
+            if ($count) $label .= ', ' . $count . ' ' . ($count === 1 ? 'reserva' : 'reservas');
+            $url = add_query_arg(array_merge($base_query, array('date' => $day_date, 'month' => $month->format('Y-m'))), admin_url('admin.php'));
+            echo '<a class="' . esc_attr($classes) . '" href="' . esc_url($url) . '" aria-label="' . esc_attr($label) . '"' . ($day_date === $date ? ' aria-current="date"' : '') . '><span>' . esc_html((string) $day) . '</span>';
+            if ($count) echo '<i aria-hidden="true"></i>';
+            echo '</a>';
+        }
+        echo '</div></div><p class="svdt-calendar-help"><span aria-hidden="true"></span> O ponto indica uma reserva registrada no dia. Dias sem reservas não recebem marcação.</p></section>';
     }
 
     public function update_booking(): void
