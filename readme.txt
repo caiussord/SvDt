@@ -3,7 +3,7 @@ Contributors: agendapro
 Tags: booking, appointments, scheduling
 Requires at least: 6.2
 Requires PHP: 8.0
-Stable tag: 0.2.5
+Stable tag: 0.2.6
 License: GPLv2 or later
 
 Plugin autoral demonstrativo para reservas de serviços em uma agenda.

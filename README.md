@@ -2,7 +2,7 @@
 
 Plugin WordPress autoral demonstrativo para negócios que atendem com hora marcada. O visitante percorre três etapas claras: serviço, data e horário, dados. O painel apresenta as reservas como uma linha do tempo e permite confirmar, cancelar e concluir cada pedido.
 
-**SvDt** vem de **Save the Date**. A identidade usa a marca enviada para este projeto. O ícone de barbearia também foi fornecido para a demonstração; confirme sua autoria e licença antes da publicação pública. Ícones gratuitos do Flaticon podem exigir crédito ao autor.
+**SvDt** vem de **Save the Date**. A identidade usa a marca e os ícones fornecidos para este projeto. Os cards de serviços usam ícones de barba, navalha, hidratação e lavagem conforme o atendimento. Confirme autoria, licença e eventuais créditos antes da publicação pública.
 
 ## Experiência
 
