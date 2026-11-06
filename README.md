@@ -79,7 +79,7 @@ Validado no Local com WordPress 7.1.4, PHP 8.2.29 e MySQL 8.4.0. Antes da migra�
 
 Uma instalação limpa isolada do WordPress ativou o plugin, criou o profissional padrão, exibiu horários e gravou uma solicitação. Ela usou o MySQL do Local com prefixo de tabelas separado; as tabelas de teste foram removidas. Ainda é necessária uma verificação em hospedagem real. Mudanças de horário de verão em fusos que as adotam não foram testadas.
 
-Para reproduzir no Local: `wp eval-file tests/smoke-local.php` e `wp eval-file tests/team-local.php`. O segundo teste usa `node tests/team-concurrency-local.mjs` internamente e limpa seus dados ao terminar; ajuste `SVDT_PORT` se a porta local não for 10011. `tests/seed-local.php` prepara apenas a demonstração e não deve ser executado em uma instalação com dados reais.
+Para reproduzir no Local: `wp eval-file tests/smoke-local.php` e `wp eval-file tests/team-local.php`. O segundo teste usa `node tests/team-concurrency-local.mjs` internamente e limpa seus dados ao terminar; ajuste `SVDT_PORT` se a porta local não for 10011. `tests/seed-local.php` prepara apenas a demonstração e não deve ser executado em uma instalação com dados reais. Com a tabela de reservas vazia, `wp eval-file tests/seed-showcase-local.php` cria seis reservas fictícias, duas para cada profissional já cadastrado, usando nomes naturais e contatos reservados para teste (`example.test`).
 
 Os scripts de teste acompanham o repositório de desenvolvimento; o ZIP distribuível contém o plugin e a documentação de uso.
 
