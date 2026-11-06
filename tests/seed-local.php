@@ -17,6 +17,14 @@ if ($legacy_id && !$wpdb->get_var($wpdb->prepare("SELECT id FROM $services WHERE
 foreach (array(
     array('Barba completa', 'Cuidado e acabamento para sua barba.', 30, 15),
     array('Corte clássico', 'Um atendimento completo, no seu ritmo.', 45, 15),
+    array('Corte degradê', 'Transição precisa e acabamento personalizado.', 60, 15),
+    array('Corte e barba', 'Visual completo em uma única visita.', 75, 15),
+    array('Acabamento de contorno', 'Ajuste das linhas do cabelo e da barba.', 20, 10),
+    array('Sobrancelha', 'Alinhamento discreto para finalizar o visual.', 15, 5),
+    array('Corte social', 'Corte versátil com acabamento alinhado.', 40, 10),
+    array('Barba com toalha quente', 'Modelagem da barba com preparo e finalização cuidadosos.', 45, 15),
+    array('Hidratação capilar', 'Tratamento para fios mais macios e bem cuidados.', 30, 10),
+    array('Lavagem e finalização', 'Lavagem e styling para sair pronto.', 25, 5),
 ) as [$name, $description, $duration, $buffer]) {
     $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM $services WHERE name = %s", $name));
     if (!$exists) {

@@ -67,7 +67,7 @@
           button.className = 'svdt-service-card';
           button.innerHTML = '<span class="svdt-service-top"><span class="svdt-service-icon" aria-hidden="true"><img alt="" width="26" height="26"></span><span class="svdt-service-number"></span></span><span class="svdt-service-name"></span><span class="svdt-service-description"></span><span class="svdt-service-bottom"><span class="svdt-service-duration"></span><span class="svdt-service-action">Escolher</span></span>';
           button.querySelector('.svdt-service-icon img').src = config.serviceIcon;
-          button.querySelector('.svdt-service-number').textContent = `0${index + 1} / SERVIÇO`;
+          button.querySelector('.svdt-service-number').textContent = `${String(index + 1).padStart(2, '0')} / SERVIÇO`;
           button.querySelector('.svdt-service-name').textContent = service.name;
           button.querySelector('.svdt-service-description').textContent = service.description || 'Atendimento com hora marcada.';
           button.querySelector('.svdt-service-duration').textContent = `${service.duration_minutes} min`;
