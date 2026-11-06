@@ -9,6 +9,9 @@ final class SvDt_REST
             register_rest_route('svdt/v1', '/services', array(
                 'methods' => 'GET', 'callback' => array($this, 'services'), 'permission_callback' => '__return_true',
             ));
+            register_rest_route('svdt/v1', '/professionals', array(
+                'methods' => 'GET', 'callback' => array($this, 'professionals'), 'permission_callback' => '__return_true',
+            ));
             register_rest_route('svdt/v1', '/availability', array(
                 'methods' => 'GET', 'callback' => array($this, 'availability'), 'permission_callback' => '__return_true',
             ));
@@ -17,6 +20,9 @@ final class SvDt_REST
             ));
             register_rest_route('svdt/v1', '/admin/bookings', array(
                 'methods' => 'GET', 'callback' => array($this, 'admin_bookings'), 'permission_callback' => array($this, 'admin_permission'),
+            ));
+            register_rest_route('svdt/v1', '/admin/professionals', array(
+                'methods' => 'GET', 'callback' => array($this, 'admin_professionals'), 'permission_callback' => array($this, 'admin_permission'),
             ));
             register_rest_route('svdt/v1', '/admin/bookings/(?P<id>\d+)', array(
                 'methods' => 'PATCH', 'callback' => array($this, 'update_booking'), 'permission_callback' => array($this, 'admin_permission'),
@@ -33,14 +39,21 @@ final class SvDt_REST
                 'description' => $row->description,
                 'duration_minutes' => (int) $row->duration_minutes,
             );
-        }, SvDt_DB::services());
+        }, array_values(array_filter(SvDt_DB::services(), static fn($service) => (bool) SvDt_DB::professionals(true, (int) $service->id))));
         return rest_ensure_response($items);
     }
 
     public function availability(WP_REST_Request $request): WP_REST_Response|WP_Error
     {
-        $slots = SvDt_Schedule::slots(absint($request['service_id']), sanitize_text_field((string) $request['date']));
+        $slots = SvDt_Schedule::slots(absint($request['service_id']), sanitize_text_field((string) $request['date']), absint($request['professional_id']));
         return is_wp_error($slots) ? $slots : rest_ensure_response(array('slots' => $slots));
+    }
+
+    public function professionals(WP_REST_Request $request): WP_REST_Response
+    {
+        $service_id = absint($request['service_id']);
+        $items = array_map(static fn($row) => array('id' => (int) $row->id, 'name' => $row->name, 'description' => $row->description), SvDt_DB::professionals(true, $service_id));
+        return rest_ensure_response($items);
     }
 
     public function create(WP_REST_Request $request): WP_REST_Response|WP_Error
@@ -67,6 +80,17 @@ final class SvDt_REST
         return current_user_can('manage_options');
     }
 
+    public function admin_professionals(): WP_REST_Response
+    {
+        global $wpdb;
+        $links = SvDt_DB::table('professional_services');
+        $items = array_map(static function ($row) use ($wpdb, $links) {
+            return array('id' => (int) $row->id, 'name' => $row->name, 'description' => $row->description, 'active' => (bool) $row->active, 'sort_order' => (int) $row->sort_order,
+                'service_ids' => array_map('intval', $wpdb->get_col($wpdb->prepare("SELECT service_id FROM $links WHERE professional_id=%d", $row->id))));
+        }, SvDt_DB::professionals(false));
+        return rest_ensure_response($items);
+    }
+
     public function admin_bookings(WP_REST_Request $request): WP_REST_Response
     {
         global $wpdb;
@@ -74,6 +98,7 @@ final class SvDt_REST
         $services = SvDt_DB::table('services');
         $date = sanitize_text_field((string) ($request['date'] ?? ''));
         $status = sanitize_text_field((string) ($request['status'] ?? ''));
+        $professional_id = absint($request['professional_id']);
         $where = array('1=1');
         $args = array();
         if (SvDt_Schedule::parse_date($date)) {
@@ -83,6 +108,10 @@ final class SvDt_REST
         if (in_array($status, array('pending', 'confirmed', 'cancelled', 'completed'), true)) {
             $where[] = 'b.status = %s';
             $args[] = $status;
+        }
+        if ($professional_id) {
+            $where[] = 'b.professional_id = %d';
+            $args[] = $professional_id;
         }
         $sql = "SELECT b.*, s.name AS service_name FROM $bookings b LEFT JOIN $services s ON s.id = b.service_id WHERE " . implode(' AND ', $where) . ' ORDER BY b.starts_at DESC LIMIT 200';
         return rest_ensure_response($wpdb->get_results($args ? $wpdb->prepare($sql, $args) : $sql));

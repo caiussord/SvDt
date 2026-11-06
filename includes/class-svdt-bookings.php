@@ -7,6 +7,7 @@ final class SvDt_Bookings
     {
         global $wpdb;
         $service_id = absint($data['service_id'] ?? 0);
+        $professional_id = absint($data['professional_id'] ?? 0);
         $date = sanitize_text_field((string) ($data['date'] ?? ''));
         $time = sanitize_text_field((string) ($data['time'] ?? ''));
         $name = sanitize_text_field((string) ($data['customer_name'] ?? ''));
@@ -19,18 +20,19 @@ final class SvDt_Bookings
             return new WP_Error('invalid_booking', 'Confira os dados do agendamento.', array('status' => 400));
         }
 
-        // One MySQL advisory lock serializes all writes to the single appointment resource.
-        $lock_name = $wpdb->prefix . 'svdt_single_calendar';
+        $service = SvDt_DB::service($service_id);
+        if (!$service) return new WP_Error('invalid_service', 'Serviço indisponível.', array('status' => 404));
+        $professional = SvDt_DB::resolve_professional($service_id, $professional_id);
+        if (is_wp_error($professional)) return $professional;
+        $professional_id = (int) $professional->id;
+        // The installation and professional identify one calendar; the hash keeps the MySQL lock name short.
+        $lock_name = SvDt_DB::calendar_lock_name($professional_id);
         $locked = $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 5)', $lock_name));
         if ((string) $locked !== '1') {
             return new WP_Error('booking_busy', 'Agenda ocupada. Tente novamente.', array('status' => 503));
         }
         try {
-            $service = SvDt_DB::service($service_id);
-            if (!$service) {
-                return new WP_Error('invalid_service', 'Serviço indisponível.', array('status' => 404));
-            }
-            $slots = SvDt_Schedule::slots($service_id, $date);
+            $slots = SvDt_Schedule::slots($service_id, $date, $professional_id);
             if (is_wp_error($slots)) {
                 return $slots;
             }
@@ -41,6 +43,7 @@ final class SvDt_Bookings
             $end = $start->modify('+' . ((int) $service->duration_minutes + (int) $service->buffer_minutes) . ' minutes');
             $inserted = $wpdb->insert(SvDt_DB::table('bookings'), array(
                 'service_id' => $service_id,
+                'professional_id' => $professional_id,
                 'customer_name' => $name,
                 'customer_email' => $email,
                 'customer_phone' => $phone,
@@ -49,7 +52,7 @@ final class SvDt_Bookings
                 'ends_at' => $end->format('Y-m-d H:i:s'),
                 'status' => 'pending',
                 'created_at' => current_time('mysql'),
-            ), array('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'));
+            ), array('%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'));
             if (!$inserted) {
                 return new WP_Error('booking_failed', 'Não foi possível salvar o agendamento.', array('status' => 500));
             }

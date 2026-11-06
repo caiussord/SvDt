@@ -8,7 +8,7 @@
     const lastDate = config.lastDate;
     const todayDate = new Date(`${today}T12:00:00`);
     const lastDay = new Date(`${lastDate}T12:00:00`);
-    const state = { step: 1, service: null, date: null, time: null, month: new Date(todayDate.getFullYear(), todayDate.getMonth(), 1) };
+    const state = { step: 1, service: null, professional: null, eligibleCount: 0, date: null, time: null, month: new Date(todayDate.getFullYear(), todayDate.getMonth(), 1) };
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const ymd = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     const longDate = value => new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -26,10 +26,12 @@
 
     function updateSummary() {
       $('[data-summary-service]').textContent = state.service?.name || '—';
+      $('[data-summary-professional]').textContent = state.professional?.name || '—';
+      $('[data-summary-professional-row]').hidden = state.eligibleCount < 2;
       $('[data-summary-date]').textContent = state.date ? longDate(state.date) : '—';
       $('[data-summary-time]').textContent = state.time || '—';
       $('[data-selection-line]').textContent = state.service && state.date && state.time
-        ? `${state.service.name} · ${longDate(state.date)} às ${state.time}` : '';
+        ? `${state.service.name}${state.eligibleCount > 1 ? ` com ${state.professional?.name}` : ''} · ${longDate(state.date)} às ${state.time}` : '';
       $$('[data-step-go]').forEach(button => {
         const target = Number(button.dataset.stepGo);
         button.disabled = target === 2 ? !state.service : target === 3 ? !state.time : false;
@@ -76,16 +78,76 @@
           button.querySelector('.svdt-service-duration').textContent = `${service.duration_minutes} min`;
           button.addEventListener('click', () => {
             state.service = service;
+            state.professional = null;
+            state.eligibleCount = 0;
+            state.date = null;
             state.time = null;
             updateSummary();
             setStep(2);
-            loadTimes();
+            loadProfessionals();
           });
           box.append(button);
         });
       } catch (error) {
         box.innerHTML = '';
         const message = document.createElement('p'); message.className = 'svdt-empty'; message.textContent = error.message; box.append(message);
+      }
+    }
+
+    async function loadProfessionals() {
+      const picker = $('[data-professionals]');
+      const options = $('[data-professional-options]');
+      const availability = $('[data-availability]');
+      const serviceId = state.service?.id;
+      picker.hidden = false;
+      availability.hidden = true;
+      options.innerHTML = '<p class="svdt-time-loading" role="status">Consultando profissionais…</p>';
+      try {
+        const professionals = await request(`professionals?service_id=${encodeURIComponent(serviceId)}`);
+        if (serviceId !== state.service?.id) return;
+        state.eligibleCount = professionals.length;
+        options.replaceChildren();
+        if (!professionals.length) {
+          options.innerHTML = '<p class="svdt-time-empty">Nenhum profissional atende este serviço no momento.</p>';
+          return;
+        }
+        const selectProfessional = professional => {
+          state.professional = professional;
+          state.date = null;
+          state.time = null;
+          availability.hidden = false;
+          $('[data-time-alert]').hidden = true;
+          options.querySelectorAll('button').forEach(button => {
+            const selected = Number(button.dataset.professionalId) === professional.id;
+            button.classList.toggle('is-selected', selected);
+            button.setAttribute('aria-pressed', String(selected));
+          });
+          renderCalendar(); updateSummary(); loadTimes();
+        };
+        if (professionals.length === 1) {
+          picker.hidden = true;
+          selectProfessional(professionals[0]);
+          return;
+        }
+        professionals.forEach(professional => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'svdt-professional-option';
+          button.dataset.professionalId = professional.id;
+          button.setAttribute('aria-pressed', 'false');
+          const name = document.createElement('strong'); name.textContent = professional.name;
+          button.append(name);
+          if (professional.description) {
+            const description = document.createElement('span'); description.textContent = professional.description;
+            button.append(description);
+          }
+          button.addEventListener('click', () => selectProfessional(professional));
+          options.append(button);
+        });
+        updateSummary();
+      } catch (error) {
+        options.replaceChildren();
+        const message = document.createElement('p'); message.className = 'svdt-time-empty'; message.textContent = error.message; options.append(message);
       }
     }
 
@@ -121,15 +183,15 @@
       const box = $('[data-times]');
       $('[data-date-label]').textContent = state.date ? longDate(state.date) : 'Escolha uma data';
       box.replaceChildren();
-      if (!state.service || !state.date) {
+      if (!state.service || !state.professional || !state.date) {
         box.innerHTML = '<div class="svdt-time-empty">Os horários aparecem aqui depois de escolher um dia.</div>';
         return;
       }
       box.innerHTML = '<div class="svdt-time-loading" role="status">Consultando horários disponíveis…</div>';
-      const serviceId = state.service.id, date = state.date;
+      const serviceId = state.service.id, professionalId = state.professional.id, date = state.date;
       try {
-        const data = await request(`availability?service_id=${encodeURIComponent(serviceId)}&date=${encodeURIComponent(date)}`);
-        if (serviceId !== state.service?.id || date !== state.date) return;
+        const data = await request(`availability?service_id=${encodeURIComponent(serviceId)}&professional_id=${encodeURIComponent(professionalId)}&date=${encodeURIComponent(date)}`);
+        if (serviceId !== state.service?.id || professionalId !== state.professional?.id || date !== state.date) return;
         box.replaceChildren();
         if (!data.slots.length) { box.innerHTML = '<div class="svdt-time-empty">Nenhum horário livre neste dia. Experimente outra data.</div>'; return; }
         data.slots.forEach(time => {
@@ -160,11 +222,11 @@
     $('[data-booking-form]').addEventListener('submit', async event => {
       event.preventDefault();
       const form = event.currentTarget;
-      if (!form.reportValidity() || !state.service || !state.date || !state.time) return;
+      if (!form.reportValidity() || !state.service || !state.professional || !state.date || !state.time) return;
       const submit = $('[data-submit]'); submit.disabled = true;
       $('[data-feedback]').textContent = 'Enviando sua solicitação…';
       const payload = Object.fromEntries(new FormData(form).entries());
-      Object.assign(payload, { service_id: state.service.id, date: state.date, time: state.time });
+      Object.assign(payload, { service_id: state.service.id, professional_id: state.professional.id, date: state.date, time: state.time });
       try {
         const data = await request('bookings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         $('[data-reference]').textContent = data.reference;

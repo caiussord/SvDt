@@ -3,17 +3,23 @@ Contributors: caiussord
 Tags: booking, appointments, scheduling
 Requires at least: 6.2
 Requires PHP: 8.0
-Stable tag: 0.3.2
+Stable tag: 2.0.0
 License: GPLv2 or later
 
-Plugin autoral demonstrativo para reservas de serviços em uma agenda.
+Plugin autoral demonstrativo para reservas de serviços por profissionais autônomos e pequenas equipes.
 
 == Installation ==
 
 1. Copie a pasta do plugin para wp-content/plugins.
 2. Ative SvDt no painel WordPress.
-3. Cadastre serviços e expediente no menu SvDt.
-4. Coloque [svdt_booking] em uma página.
+3. Cadastre serviços e vincule-os aos profissionais no menu SvDt.
+4. Configure o expediente e as folgas de cada profissional.
+5. Coloque [svdt_booking] em uma página.
+
+== Upgrade Notice ==
+
+= 2.0.0 =
+Faça backup do banco antes de atualizar. As reservas existentes são vinculadas a um profissional padrão. Consulte docs/migration-v2.md.
 
 == Privacy ==
 
