@@ -1,5 +1,11 @@
 .DS_Store
 Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.code-workspace
+*.tmp
+*.swp
 node_modules/
 vendor/
 .phpunit.result.cache
@@ -25,8 +31,14 @@ id_rsa*
 # Dados, backups e arquivos gerados pelo ambiente local.
 *.sql
 *.sql.gz
+*.json
+*.jsonl
+*.ndjson
+*.csv
+*.tsv
 *.sqlite
 *.sqlite3
+*.sqlite-*
 *.db
 *.dump
 *.bak
@@ -34,7 +46,12 @@ id_rsa*
 *.zip
 *.7z
 *.rar
+*.tar
+*.tar.gz
+*.wpress
 backups/
+private-backups/
+SvDt-private-archive/
 wp-content/uploads/
 wp-content/cache/
 .local/
