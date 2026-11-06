@@ -4,3 +4,39 @@ node_modules/
 vendor/
 .phpunit.result.cache
 *.log
+
+# Planejamento privado, caso seja copiado para este repositorio.
+PROJETO_03_AGENDAPRO.md
+
+# Credenciais e configuracao local do WordPress.
+.env
+.env.*
+!.env.example
+wp-config.php
+wp-config-*.php
+config.local.php
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+id_rsa*
+
+# Dados, backups e arquivos gerados pelo ambiente local.
+*.sql
+*.sql.gz
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.bak
+*.backup
+*.zip
+*.7z
+*.rar
+backups/
+wp-content/uploads/
+wp-content/cache/
+.local/
+.phpunit.cache/
+coverage/
