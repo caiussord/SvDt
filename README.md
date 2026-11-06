@@ -81,6 +81,8 @@ Uma instalação limpa isolada do WordPress ativou o plugin, criou o profissiona
 
 Para reproduzir no Local: `wp eval-file tests/smoke-local.php` e `wp eval-file tests/team-local.php`. O segundo teste usa `node tests/team-concurrency-local.mjs` internamente e limpa seus dados ao terminar; ajuste `SVDT_PORT` se a porta local não for 10011. `tests/seed-local.php` prepara apenas a demonstração e não deve ser executado em uma instalação com dados reais.
 
+Os scripts de teste acompanham o repositório de desenvolvimento; o ZIP distribuível contém o plugin e a documentação de uso.
+
 ## Privacidade e limites
 
 Nome, e-mail, telefone e observações são armazenados para administrar a solicitação. Reservas canceladas e concluídas são removidas pelo WP-Cron após 12 meses. Reservas pendentes e confirmadas permanecem até que o administrador altere seu status. A desinstalação preserva dados por padrão; para apagá-los de forma irreversível, defina `SVDT_DELETE_DATA` como `true` no `wp-config.php` antes de desinstalar.
